@@ -25,8 +25,7 @@
             @click="handleItemClick(item)"
           >
             <!-- Icon -->
-            <span v-if="item.icon" class="context-menu-icon">
-              <component :is="getIconComponent(item.icon)" />
+            <span v-if="item.icon" class="context-menu-icon" v-html="getIconSvg(item.icon)">
             </span>
             
             <!-- Label -->
@@ -44,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick, h } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 const props = defineProps({
   visible: {
@@ -112,54 +111,54 @@ const menuStyle = computed(() => {
   }
 })
 
-// Get icon component by name
-function getIconComponent(iconName) {
+// Get icon SVG string by name
+function getIconSvg(iconName) {
   const icons = {
-    'zoom-in': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('circle', { cx: '11', cy: '11', r: '8' }),
-      h('path', { d: 'M21 21l-4.35-4.35' }),
-      h('path', { d: '11 8v6M8 11h6' })
-    ]),
-    'download': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: '21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
-      h('polyline', { points: '7 10 12 15 17 10' }),
-      h('line', { x1: '12', y1: '15', x2: '12', y2: '3' })
-    ]),
-    'tag': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: '20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z' }),
-      h('line', { x1: '7', y1: '7', x2: '7.01', y2: '7' })
-    ]),
-    'trash': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('polyline', { points: '3 6 5 6 21 6' }),
-      h('path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' }),
-      h('line', { x1: '10', y1: '11', x2: '10', y2: '17' }),
-      h('line', { x1: '14', y1: '11', x2: '14', y2: '17' })
-    ]),
-    'check-square': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('polyline', { points: '9 11 12 14 22 4' }),
-      h('path', { d: 'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' })
-    ]),
-    'edit': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
-      h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' })
-    ]),
-    'copy': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('rect', { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' }),
-      h('path', { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' })
-    ]),
-    'upload': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('path', { d: '21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
-      h('polyline', { points: '17 8 12 3 7 8' }),
-      h('line', { x1: '12', y1: '3', x2: '12', y2: '15' })
-    ]),
-    'info': () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2' }, [
-      h('circle', { cx: '12', cy: '12', r: '10' }),
-      h('line', { x1: '12', y1: '16', x2: '12', y2: '12' }),
-      h('line', { x1: '12', y1: '8', x2: '12.01', y2: '8' })
-    ])
+    'zoom-in': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="M21 21l-4.35-4.35"/>
+      <path d="M11 8v6M8 11h6"/>
+    </svg>`,
+    'download': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>`,
+    'tag': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+      <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>`,
+    'trash': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      <line x1="10" y1="11" x2="10" y2="17"/>
+      <line x1="14" y1="11" x2="14" y2="17"/>
+    </svg>`,
+    'check-square': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="9 11 12 14 22 4"/>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>`,
+    'edit': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>`,
+    'copy': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>`,
+    'upload': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>`,
+    'info': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="16" x2="12" y2="12"/>
+      <line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>`
   }
   
-  return icons[iconName] || null
+  return icons[iconName] || ''
 }
 
 // Handle item click
