@@ -6,7 +6,7 @@ Wall Photo Display is a multi-user photo wall PWA (Progressive Web App) with Vue
 
 ## Main Styles
 
-整体风格设计采用类似 iOS 的简洁风格，配色以蓝色为主色调，辅以白色和浅灰色。按钮、输入框等交互元素采用圆角设计，悬浮和点击时有轻微阴影效果。整体界面注重留白，避免过度拥挤。
+整体风格设计采用类似 iOS 或 iPadOS 的风格，配色以蓝色为主色调，辅以白色和浅灰色。按钮、输入框等交互元素采用圆角设计，悬浮和点击时有轻微阴影效果。整体界面注重留白，避免过度拥挤。
 
 ## 页面布局、设计、交互逻辑
 
