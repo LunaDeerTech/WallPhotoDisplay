@@ -26,7 +26,7 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // 确保 uploads/photos 目录存在
-const uploadsDir = path.join(__dirname, '../../uploads/photos')
+const uploadsDir = path.join(__dirname, '../../data/uploads/photos')
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
   console.log('✓ 创建 uploads/photos 目录')
