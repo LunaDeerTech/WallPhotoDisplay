@@ -272,47 +272,71 @@ const handleLogout = () => {
     bottom: var(--spacing-md);
     top: auto;
     width: auto;
+    height: auto;
     flex-direction: row;
-    border-radius: var(--radius-xl);
+    justify-content: space-around;
+    align-items: center;
+    border-radius: var(--radius-xxl);
+    border-right: none;
+    border-top: none;
     background-color: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     box-shadow: var(--shadow-xl);
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: env(safe-area-inset-bottom, 0);
+    z-index: 1000;
   }
 
   [data-theme="dark"] .sidebar {
     background-color: rgba(28, 28, 30, 0.9);
+    border: 1px solid var(--color-separator);
   }
 
   .sidebar-header {
     display: none;
   }
 
-  .sidebar-nav {
-    flex-direction: row;
-    justify-content: space-around;
-    padding: var(--spacing-sm) var(--spacing-md);
-    gap: 0;
-    flex: 1;
-  }
-
+  .sidebar-nav, 
   .sidebar-footer {
-    display: flex;
-    padding: var(--spacing-sm);
-    border-top: none;
-    border-left: 1px solid var(--color-separator);
+    display: contents;
   }
 
   .sidebar-btn {
+    width: auto;
     aspect-ratio: auto;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm);
     min-width: 56px;
+    height: auto;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    gap: 2px;
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-lg);
+  }
+  
+  .sidebar-btn:hover {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-accent);
+  }
+  
+  .sidebar-btn:active {
+    transform: scale(0.95);
+    opacity: 1;
+    background-color: var(--color-bg-tertiary) !important;
   }
 
   .icon {
     width: 24px;
     height: 24px;
+    stroke-width: 2;
+  }
+  
+  .sidebar-btn-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
   }
 }
 </style>
