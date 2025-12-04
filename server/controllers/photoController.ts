@@ -253,7 +253,7 @@ export async function uploadPhotos(req: AuthenticatedRequest, res: Response): Pr
           // 添加标签
           if (tagNames.length > 0) {
             Photo.updateTags(photo.id, tagNames)
-            photo.tags = tagNames
+            photo.tags = tagNames.map(name => ({ id: 0, name, createdAt: new Date().toISOString() }))
           }
           
           // 添加 URL
