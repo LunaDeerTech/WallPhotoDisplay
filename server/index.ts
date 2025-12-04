@@ -32,15 +32,20 @@ app.use('/api/photos', photoRoutes)
 app.use('/api/tags', tagRoutes)
 
 // Static files - uploaded photos
-// Use UPLOAD_PATH from env or default to ../uploads
-const uploadPath = process.env.UPLOAD_PATH || path.join(__dirname, '../uploads')
+// In production: dist/server -> ../../data/uploads
+// In development with tsx: server -> ../data/uploads
+const isProduction = process.env.NODE_ENV === 'production' || __dirname.includes('dist')
+const uploadPath = process.env.UPLOAD_PATH || path.join(__dirname, isProduction ? '../../data/uploads' : '../data/uploads')
 app.use('/uploads', express.static(uploadPath))
 
 // Vue SPA support - must be after API routes
 app.use(history())
 
 // Static files - Vue build output
-app.use(express.static(path.join(__dirname, '../dist')))
+// In production: dist/server -> .. (which is dist/)
+// In development: serve from dist/ folder
+const staticPath = isProduction ? path.join(__dirname, '..') : path.join(__dirname, '../dist')
+app.use(express.static(staticPath))
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
