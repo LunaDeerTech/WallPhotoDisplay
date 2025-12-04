@@ -3,7 +3,7 @@
     v-model="isOpen"
     title="管理图片"
     subtitle="管理您上传的图片"
-    size="lg"
+    size="xl"
     @close="handleClose"
   >
     <div class="photo-manage-content">
@@ -518,8 +518,8 @@ function handleClose(): void {
 .photo-manage-content {
   display: flex;
   flex-direction: column;
-  height: 60vh;
-  min-height: 400px;
+  height: 75vh;
+  min-height: 500px;
 }
 
 /* Toolbar */
@@ -636,7 +636,7 @@ function handleClose(): void {
 
 .photos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--spacing-md);
 }
 
