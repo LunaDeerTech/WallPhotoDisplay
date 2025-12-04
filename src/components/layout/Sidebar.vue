@@ -107,19 +107,17 @@
 
 <script setup>
 import { computed } from 'vue'
-// import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '../../stores/auth.js'
 
-// const authStore = useAuthStore()
+const authStore = useAuthStore()
 
-// TODO: Replace with actual store integration
-const isLoggedIn = computed(() => false)
-const isAdmin = computed(() => false)
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+const isAdmin = computed(() => authStore.isAdmin)
 
 defineEmits(['open-dialog'])
 
-const handleLogout = () => {
-  // authStore.logout()
-  console.log('Logout clicked')
+const handleLogout = async () => {
+  await authStore.logout()
 }
 </script>
 
