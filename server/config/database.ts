@@ -1,4 +1,5 @@
-import Database, { Database as DatabaseType } from 'better-sqlite3'
+import Database from 'better-sqlite3'
+import type { Database as DatabaseType } from 'better-sqlite3'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'

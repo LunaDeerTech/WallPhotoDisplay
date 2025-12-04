@@ -1,4 +1,5 @@
-import { Router } from 'express'
+import express from 'express'
+const Router = express.Router
 import {
   getPhotos,
   getMyPhotos,
@@ -8,9 +9,9 @@ import {
   deletePhoto,
   batchDeletePhotos,
   batchUpdateTags
-} from '../controllers/photoController.js'
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.js'
-import { uploadMultiple, handleUploadError } from '../middleware/upload.js'
+} from '../controllers/photoController.ts'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.ts'
+import { uploadMultiple, handleUploadError } from '../middleware/upload.ts'
 
 const router = Router()
 

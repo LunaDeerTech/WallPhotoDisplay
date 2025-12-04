@@ -66,4 +66,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/tags || exit 1
 
 # 启动命令
-CMD ["node", "server/index.js"]
+CMD ["node", "server/index.ts"]

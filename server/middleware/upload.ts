@@ -1,9 +1,11 @@
-import multer, { FileFilterCallback, MulterError } from 'multer'
+import multer from 'multer'
+import type { FileFilterCallback } from 'multer'
+import { MulterError } from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
-import { Request, Response, NextFunction } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

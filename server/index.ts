@@ -1,4 +1,5 @@
-import express, { ErrorRequestHandler } from 'express'
+import express from 'express'
+import type { ErrorRequestHandler } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import cors from 'cors'
@@ -6,10 +7,10 @@ import history from 'connect-history-api-fallback'
 import dotenv from 'dotenv'
 
 // Import routes
-import authRoutes from './routes/auth.js'
-import userRoutes from './routes/users.js'
-import photoRoutes from './routes/photos.js'
-import tagRoutes from './routes/tags.js'
+import authRoutes from './routes/auth.ts'
+import userRoutes from './routes/users.ts'
+import photoRoutes from './routes/photos.ts'
+import tagRoutes from './routes/tags.ts'
 
 // Load environment variables
 dotenv.config()

@@ -1,7 +1,7 @@
-import { Response } from 'express'
-import { User } from '../models/index.js'
+import type { Response } from 'express'
+import { User } from '../models/index.ts'
 import bcrypt from 'bcrypt'
-import type { AuthenticatedRequest, UserCreateInput, UserUpdateInput } from '../types/index.js'
+import type { AuthenticatedRequest, UserCreateInput, UserUpdateInput } from '../types/index.ts'
 
 // 请求体类型定义
 interface PasswordUpdateBody {

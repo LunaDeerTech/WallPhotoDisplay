@@ -1,6 +1,7 @@
-import { Router } from 'express'
-import { login, logout, getCurrentUser } from '../controllers/authController.js'
-import { authMiddleware } from '../middleware/auth.js'
+import express from 'express'
+const Router = express.Router
+import { login, logout, getCurrentUser } from '../controllers/authController.ts'
+import { authMiddleware } from '../middleware/auth.ts'
 
 const router = Router()
 

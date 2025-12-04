@@ -1,4 +1,4 @@
-import db from '../config/database.js'
+import db from '../config/database.ts'
 
 // 数据库返回的标签行类型
 interface TagRow {

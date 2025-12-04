@@ -1,4 +1,5 @@
-import { Router } from 'express'
+import express from 'express'
+const Router = express.Router
 import {
   getAllUsers,
   getUserById,
@@ -6,8 +7,8 @@ import {
   updateUser,
   deleteUser,
   updatePassword
-} from '../controllers/userController.js'
-import { authMiddleware, adminMiddleware } from '../middleware/auth.js'
+} from '../controllers/userController.ts'
+import { authMiddleware, adminMiddleware } from '../middleware/auth.ts'
 
 const router = Router()
 

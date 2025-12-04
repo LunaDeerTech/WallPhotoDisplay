@@ -1,8 +1,8 @@
-import { Response } from 'express'
-import { User } from '../models/index.js'
-import { generateToken } from '../middleware/auth.js'
+import type { Response } from 'express'
+import { User } from '../models/index.ts'
+import { generateToken } from '../middleware/auth.ts'
 import bcrypt from 'bcrypt'
-import type { AuthenticatedRequest, LoginRequestBody } from '../types/index.js'
+import type { AuthenticatedRequest, LoginRequestBody } from '../types/index.ts'
 
 /**
  * 用户登录

@@ -1,6 +1,6 @@
-import { Response } from 'express'
-import { Tag } from '../models/index.js'
-import type { AuthenticatedRequest } from '../types/index.js'
+import type { Response } from 'express'
+import { Tag } from '../models/index.ts'
+import type { AuthenticatedRequest } from '../types/index.ts'
 
 /**
  * 获取所有标签

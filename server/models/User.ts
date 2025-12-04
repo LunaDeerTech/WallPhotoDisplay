@@ -1,6 +1,6 @@
-import db from '../config/database.js'
+import db from '../config/database.ts'
 import bcrypt from 'bcrypt'
-import type { UserPublic, UserWithPassword, UserCreateInput, UserUpdateInput } from '../types/index.js'
+import type { UserPublic, UserWithPassword, UserCreateInput, UserUpdateInput } from '../types/index.ts'
 
 const SALT_ROUNDS = 10
 

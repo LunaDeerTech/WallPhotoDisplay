@@ -1,4 +1,4 @@
-import { Request } from 'express'
+import type { Request } from 'express'
 
 // =====================
 // 数据库实体类型 (对应数据库表结构)
@@ -357,7 +357,7 @@ export interface UploadResponseData {
 // 控制器方法类型
 // =====================
 
-import { Response, NextFunction } from 'express'
+import type { Response, NextFunction } from 'express'
 
 /**
  * Express 路由处理器类型
