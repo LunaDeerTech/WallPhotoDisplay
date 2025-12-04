@@ -253,6 +253,11 @@ function handlePhotoView(photo: Photo): void {
 let observer: IntersectionObserver | null = null
 
 function setupIntersectionObserver(): void {
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
+
   if (!loadMoreTrigger.value) return
   
   observer = new IntersectionObserver(
@@ -338,6 +343,7 @@ watch(() => props.columns, () => {
 watch(() => props.photos, () => {
   nextTick(() => {
     calculateLayout()
+    setupIntersectionObserver()
   })
 }, { deep: true })
 

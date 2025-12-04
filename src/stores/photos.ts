@@ -131,7 +131,11 @@ export const usePhotosStore = defineStore('photos', () => {
       const response = await photosApi.getPhotos(params)
       
       if (response.success && response.data) {
-        photos.value = [...photos.value, ...response.data.photos]
+        // Filter out duplicates
+        const newPhotos = response.data.photos.filter(
+          (newPhoto) => !photos.value.some((existing) => existing.id === newPhoto.id)
+        )
+        photos.value = [...photos.value, ...newPhotos]
         pagination.value = response.data.pagination
         return { success: true }
       } else {
