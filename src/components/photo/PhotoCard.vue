@@ -412,7 +412,7 @@ onMounted(() => {
   pointer-events: none;
 }
 
-.photo-card:hover .photo-hover-overlay {
+.photo-card:not(.photo-card-selectable):hover .photo-hover-overlay {
   background-color: rgba(0, 0, 0, 0.3);
   opacity: 1;
   pointer-events: auto;
