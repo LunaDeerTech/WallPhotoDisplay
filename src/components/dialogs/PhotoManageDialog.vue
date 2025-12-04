@@ -173,7 +173,7 @@
     <!-- Photo viewer -->
     <PhotoViewer
       v-model="showViewer"
-      :photo="viewingPhoto"
+      :photos="viewingPhoto ? [viewingPhoto] : []"
     />
 
     <!-- Tag edit dialog -->
