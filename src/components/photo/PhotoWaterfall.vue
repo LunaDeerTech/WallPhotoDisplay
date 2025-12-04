@@ -2,7 +2,7 @@
   <div class="photo-waterfall-container" ref="containerRef">
     <!-- Loading state -->
     <div v-if="loading && photos.length === 0" class="waterfall-loading">
-      <div class="loading-grid">
+      <div class="loading-grid" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)` }">
         <div
           v-for="i in columns * 2"
           :key="`skeleton-${i}`"
@@ -29,13 +29,14 @@
     <div
       v-else
       class="waterfall-grid"
-      :style="gridStyle"
       ref="gridRef"
+      :style="{ height: `${containerHeight}px` }"
     >
       <div
         v-for="photo in photos"
         :key="photo.id"
         class="waterfall-item"
+        :data-id="photo.id"
         :style="getItemStyle(photo)"
       >
         <PhotoCard
@@ -48,6 +49,7 @@
           @contextmenu="handlePhotoContextMenu"
           @select="handlePhotoSelect"
           @view="handlePhotoView"
+          @image-load="handleImageLoad(photo)"
         />
       </div>
     </div>
@@ -132,25 +134,110 @@ const loadMoreTrigger = ref(null)
 // State
 const columnHeights = ref([])
 const itemPositions = ref(new Map())
+const containerHeight = ref(0)
+const columnWidth = ref(0)
 
-// Computed
-const gridStyle = computed(() => ({
-  display: 'grid',
-  gridTemplateColumns: `repeat(${props.columns}, 1fr)`,
-  gap: `${props.gap}px`,
-  position: 'relative'
-}))
+// Initialize column heights
+function initColumnHeights() {
+  columnHeights.value = new Array(props.columns).fill(0)
+}
+
+// Get shortest column index
+function getShortestColumnIndex() {
+  if (columnHeights.value.length === 0) return 0
+  const minHeight = Math.min(...columnHeights.value)
+  return columnHeights.value.indexOf(minHeight)
+}
+
+// Calculate column width
+function calculateColumnWidth() {
+  if (!gridRef.value) return 0
+  const gridWidth = gridRef.value.clientWidth
+  const totalGap = props.gap * (props.columns - 1)
+  columnWidth.value = (gridWidth - totalGap) / props.columns
+  return columnWidth.value
+}
+
+// Calculate layout for all photos
+function calculateLayout() {
+  if (!gridRef.value || props.photos.length === 0) {
+    containerHeight.value = 0
+    return
+  }
+
+  // Calculate column width
+  calculateColumnWidth()
+  
+  // Reset column heights
+  initColumnHeights()
+  itemPositions.value.clear()
+
+  // Calculate position for each photo
+  props.photos.forEach(photo => {
+    const width = columnWidth.value
+    const columnIndex = getShortestColumnIndex()
+    const x = columnIndex * (width + props.gap)
+    const y = columnHeights.value[columnIndex]
+
+    // Calculate height based on aspect ratio
+    let itemHeight
+    if (photo.width && photo.height) {
+      itemHeight = (photo.height / photo.width) * width
+    } else {
+      // Default 4:3 aspect ratio
+      itemHeight = width * 0.75
+    }
+
+    // Store position
+    itemPositions.value.set(photo.id, {
+      x,
+      y,
+      width,
+      height: itemHeight,
+      columnIndex
+    })
+
+    // Update column height
+    columnHeights.value[columnIndex] += itemHeight + props.gap
+  })
+
+  // Set container height
+  containerHeight.value = Math.max(...columnHeights.value, 0)
+}
+
+// Get item style based on calculated position
+function getItemStyle(photo) {
+  const position = itemPositions.value.get(photo.id)
+  if (!position) {
+    // Fallback: calculate on-the-fly if not yet calculated
+    return {
+      position: 'absolute',
+      left: '0px',
+      top: '0px',
+      width: `${columnWidth.value || 200}px`,
+      opacity: 0
+    }
+  }
+  
+  return {
+    position: 'absolute',
+    left: `${position.x}px`,
+    top: `${position.y}px`,
+    width: `${position.width}px`,
+    opacity: 1,
+    transition: 'transform 0.3s ease, opacity 0.3s ease'
+  }
+}
 
 // Check if photo is selected
 function isSelected(photoId) {
   return props.selectedIds.includes(photoId)
 }
 
-// Calculate item position for waterfall
-function getItemStyle(photo) {
-  return {
-    // Using CSS Grid, position is automatic
-  }
+// Handle image load - recalculate if needed
+function handleImageLoad(photo) {
+  // If the photo has dimensions, no need to recalculate
+  // Otherwise, we might need to recalculate
 }
 
 // Event handlers
@@ -200,29 +287,74 @@ function destroyIntersectionObserver() {
   }
 }
 
+// Resize handler with debounce
+let resizeTimer = null
+function handleResize() {
+  if (resizeTimer) {
+    clearTimeout(resizeTimer)
+  }
+  resizeTimer = setTimeout(() => {
+    calculateLayout()
+  }, 100)
+}
+
+// Setup resize observer
+let resizeObserver = null
+
+function setupResizeObserver() {
+  if (!gridRef.value || typeof ResizeObserver === 'undefined') return
+  
+  resizeObserver = new ResizeObserver(() => {
+    handleResize()
+  })
+  
+  resizeObserver.observe(gridRef.value)
+}
+
+function destroyResizeObserver() {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   nextTick(() => {
+    calculateLayout()
     setupIntersectionObserver()
+    setupResizeObserver()
   })
 })
 
 onUnmounted(() => {
   destroyIntersectionObserver()
+  destroyResizeObserver()
+  if (resizeTimer) {
+    clearTimeout(resizeTimer)
+  }
 })
 
 // Watch for column changes
 watch(() => props.columns, () => {
-  columnHeights.value = new Array(props.columns).fill(0)
-  itemPositions.value.clear()
+  nextTick(() => {
+    calculateLayout()
+  })
 })
 
 // Watch for photos changes
 watch(() => props.photos, () => {
   nextTick(() => {
-    // Recalculate positions if needed
+    calculateLayout()
   })
 }, { deep: true })
+
+// Watch for gap changes
+watch(() => props.gap, () => {
+  nextTick(() => {
+    calculateLayout()
+  })
+})
 </script>
 
 <style scoped>
@@ -238,7 +370,6 @@ watch(() => props.photos, () => {
 
 .loading-grid {
   display: grid;
-  grid-template-columns: repeat(v-bind(columns), 1fr);
   gap: var(--spacing-md);
 }
 
@@ -299,14 +430,15 @@ watch(() => props.photos, () => {
   color: var(--color-text-secondary);
 }
 
-/* Waterfall grid */
+/* Waterfall grid - true masonry layout */
 .waterfall-grid {
+  position: relative;
   width: 100%;
 }
 
 .waterfall-item {
-  break-inside: avoid;
-  page-break-inside: avoid;
+  position: absolute;
+  transition: transform 0.3s ease, opacity 0.3s ease, left 0.3s ease, top 0.3s ease;
 }
 
 /* Load more trigger */
@@ -347,7 +479,7 @@ watch(() => props.photos, () => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .loading-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
   }
   
   .empty-icon {

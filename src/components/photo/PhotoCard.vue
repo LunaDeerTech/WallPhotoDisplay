@@ -20,20 +20,23 @@
       </div>
     </Transition>
 
-    <!-- Image container -->
-    <div class="photo-image-container">
+    <!-- Image container with aspect ratio placeholder -->
+    <div 
+      class="photo-image-container"
+      :style="containerStyle"
+    >
       <!-- Placeholder / Loading skeleton -->
-      <div v-if="loading" class="photo-skeleton">
+      <div v-if="loading && !imageError" class="photo-skeleton">
         <div class="skeleton-shimmer" />
       </div>
       
-      <!-- Actual image -->
+      <!-- Actual image - always rendered for loading to work -->
       <img
-        v-else
         ref="imgRef"
-        :src="thumbnailUrl || photo.url"
+        :src="imageUrl"
         :alt="photo.originalName || 'Photo'"
         class="photo-image"
+        :class="{ 'photo-image-loaded': !loading && !imageError }"
         loading="lazy"
         @load="handleImageLoad"
         @error="handleImageError"
@@ -91,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 
 const props = defineProps({
   photo: {
@@ -132,7 +135,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['click', 'contextmenu', 'select', 'view'])
+const emit = defineEmits(['click', 'contextmenu', 'select', 'view', 'image-load'])
 
 // State
 const imgRef = ref(null)
@@ -142,6 +145,11 @@ const imageError = ref(false)
 // Computed
 const thumbnailUrl = computed(() => {
   return props.photo.thumbnailUrl || props.photo.url
+})
+
+// 图片 URL - 优先使用缩略图
+const imageUrl = computed(() => {
+  return props.photo.thumbnailUrl || props.photo.url || ''
 })
 
 const displayTags = computed(() => {
@@ -155,6 +163,19 @@ const aspectRatio = computed(() => {
     return (props.photo.height / props.photo.width) * 100
   }
   return 75 // Default 4:3 aspect ratio
+})
+
+// Container style with aspect ratio for proper waterfall layout
+const containerStyle = computed(() => {
+  if (props.photo.width && props.photo.height) {
+    return {
+      paddingBottom: `${aspectRatio.value}%`
+    }
+  }
+  // Fallback to default aspect ratio if no dimensions
+  return {
+    paddingBottom: '75%'
+  }
 })
 
 // Event handlers
@@ -177,6 +198,8 @@ function handleSelect() {
 function handleImageLoad() {
   loading.value = false
   imageError.value = false
+  // Emit event for parent to potentially recalculate layout
+  emit('image-load', props.photo)
 }
 
 function handleImageError() {
@@ -184,14 +207,17 @@ function handleImageError() {
   imageError.value = true
 }
 
-// Initialize with loading state
+// Initialize - check if image is already cached/loaded
 onMounted(() => {
-  // Small delay for better UX
-  setTimeout(() => {
-    if (imgRef.value?.complete) {
-      loading.value = false
+  // Check if image is already loaded (from cache)
+  nextTick(() => {
+    if (imgRef.value) {
+      if (imgRef.value.complete && imgRef.value.naturalHeight !== 0) {
+        loading.value = false
+        imageError.value = false
+      }
     }
-  }, 50)
+  })
 })
 </script>
 
@@ -270,7 +296,7 @@ onMounted(() => {
   transform: scale(0.8);
 }
 
-/* Image container */
+/* Image container - supports aspect ratio via padding-bottom */
 .photo-image-container {
   position: relative;
   width: 100%;
@@ -278,24 +304,31 @@ onMounted(() => {
 }
 
 .photo-image {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-slow);
+  opacity: 0;
+  transition: transform var(--transition-slow), opacity 0.3s ease;
+}
+
+.photo-image-loaded {
+  opacity: 1;
 }
 
 .photo-card:hover .photo-image {
   transform: scale(1.03);
 }
 
-/* Loading skeleton */
+/* Loading skeleton - fills the aspect ratio container */
 .photo-skeleton {
-  position: relative;
-  width: 100%;
-  padding-bottom: 75%;
+  position: absolute;
+  inset: 0;
   background-color: var(--color-bg-tertiary);
   overflow: hidden;
+  z-index: 1;
 }
 
 .skeleton-shimmer {

@@ -4,6 +4,9 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
  * useWaterfall composable - 瀑布流布局计算
  * 
  * 提供真正的瀑布流布局算法，将项目放置在最短的列中
+ * 支持两种模式：
+ * 1. DOM-based: 基于实际DOM元素进行布局计算
+ * 2. Data-based: 基于图片数据（宽高比）进行预计算
  */
 export function useWaterfall(options = {}) {
   const {
@@ -19,13 +22,15 @@ export function useWaterfall(options = {}) {
   const containerHeight = ref(0)
   const itemPositions = ref(new Map())
   const isCalculating = ref(false)
+  const columnWidthValue = ref(0)
   
   // Computed
   const columnWidth = computed(() => {
-    if (!containerRef?.value) return 0
+    if (!containerRef?.value) return columnWidthValue.value
     const containerWidth = containerRef.value.clientWidth
     const totalGap = gap * (columns.value - 1)
-    return (containerWidth - totalGap) / columns.value
+    columnWidthValue.value = (containerWidth - totalGap) / columns.value
+    return columnWidthValue.value
   })
   
   /**
@@ -47,27 +52,85 @@ export function useWaterfall(options = {}) {
   }
   
   /**
-   * 计算单个项目的位置
+   * 初始化列高度数组
    */
-  function calculateItemPosition(itemHeight, itemId = null) {
+  function initColumnHeights() {
+    columnHeights.value = new Array(columns.value).fill(0)
+  }
+  
+  /**
+   * 计算单个项目的位置（基于宽高比）
+   * @param {Object} item - 图片数据对象，包含 width 和 height
+   * @param {string|number} itemId - 项目ID
+   * @returns {Object} 位置信息 { x, y, width, height, columnIndex }
+   */
+  function calculateItemPosition(item, itemId = null) {
+    const width = columnWidth.value
     const columnIndex = getShortestColumnIndex()
-    const x = columnIndex * (columnWidth.value + gap)
+    const x = columnIndex * (width + gap)
     const y = columnHeights.value[columnIndex]
+    
+    // 基于宽高比计算高度
+    let itemHeight
+    if (item && item.width && item.height) {
+      itemHeight = (item.height / item.width) * width
+    } else if (typeof item === 'number') {
+      // 如果传入的是高度数值
+      itemHeight = item
+    } else {
+      // 默认 4:3 比例
+      itemHeight = width * 0.75
+    }
     
     // Update column height
     columnHeights.value[columnIndex] += itemHeight + gap
     
-    const position = { x, y, width: columnWidth.value, columnIndex }
+    const position = { x, y, width, height: itemHeight, columnIndex }
     
     if (itemId !== null) {
       itemPositions.value.set(itemId, position)
     }
     
+    // Update container height
+    containerHeight.value = Math.max(...columnHeights.value)
+    
     return position
   }
   
   /**
-   * 计算所有项目的布局
+   * 基于数据计算所有项目的布局（不依赖DOM）
+   * @param {Array} items - 图片数据数组，每项包含 id, width, height
+   * @returns {Map} 位置映射 Map<id, position>
+   */
+  function calculateLayoutFromData(items) {
+    if (!items || items.length === 0) {
+      itemPositions.value.clear()
+      containerHeight.value = 0
+      return itemPositions.value
+    }
+    
+    // 确保列宽已计算
+    if (containerRef?.value) {
+      const containerWidth = containerRef.value.clientWidth
+      const totalGap = gap * (columns.value - 1)
+      columnWidthValue.value = (containerWidth - totalGap) / columns.value
+    }
+    
+    // Reset
+    initColumnHeights()
+    itemPositions.value.clear()
+    
+    // Calculate positions for each item
+    items.forEach(item => {
+      const id = item.id
+      calculateItemPosition(item, id)
+    })
+    
+    return itemPositions.value
+  }
+  
+  /**
+   * 计算所有项目的布局（基于DOM）
    */
   function calculateLayout() {
     if (!containerRef?.value || isCalculating.value) return
@@ -75,7 +138,7 @@ export function useWaterfall(options = {}) {
     isCalculating.value = true
     
     // Reset column heights
-    columnHeights.value = new Array(columns.value).fill(0)
+    initColumnHeights()
     itemPositions.value.clear()
     
     const container = containerRef.value
@@ -109,8 +172,16 @@ export function useWaterfall(options = {}) {
         }
       }
       
-      // Calculate position
-      const position = calculateItemPosition(itemHeight, itemId)
+      // Calculate position - pass height as number
+      const columnIndex = getShortestColumnIndex()
+      const x = columnIndex * (width + gap)
+      const y = columnHeights.value[columnIndex]
+      
+      // Update column height
+      columnHeights.value[columnIndex] += itemHeight + gap
+      
+      const position = { x, y, width, height: itemHeight, columnIndex }
+      itemPositions.value.set(itemId, position)
       
       // Apply position to element
       itemElement.style.position = 'absolute'
@@ -130,13 +201,16 @@ export function useWaterfall(options = {}) {
   /**
    * 添加新项目到布局
    */
-  function addItem(itemElement, itemId = null) {
+  function addItem(itemElement, itemId = null, itemData = null) {
     if (!containerRef?.value) return null
     
     const width = columnWidth.value
     let itemHeight = itemElement.offsetHeight
     
-    if (itemHeight === 0) {
+    // 优先使用传入的数据计算高度
+    if (itemData && itemData.width && itemData.height) {
+      itemHeight = (itemData.height / itemData.width) * width
+    } else if (itemHeight === 0) {
       const img = itemElement.querySelector('img')
       if (img && img.naturalWidth && img.naturalHeight) {
         itemHeight = (img.naturalHeight / img.naturalWidth) * width
@@ -145,7 +219,18 @@ export function useWaterfall(options = {}) {
       }
     }
     
-    const position = calculateItemPosition(itemHeight, itemId)
+    // Calculate position
+    const columnIndex = getShortestColumnIndex()
+    const x = columnIndex * (width + gap)
+    const y = columnHeights.value[columnIndex]
+    
+    columnHeights.value[columnIndex] += itemHeight + gap
+    
+    const position = { x, y, width, height: itemHeight, columnIndex }
+    
+    if (itemId !== null) {
+      itemPositions.value.set(itemId, position)
+    }
     
     // Apply position
     itemElement.style.position = 'absolute'
@@ -258,6 +343,9 @@ export function useWaterfall(options = {}) {
     
     // Methods
     calculateLayout,
+    calculateLayoutFromData,
+    calculateItemPosition,
+    initColumnHeights,
     addItem,
     removeItem,
     getItemPosition,
