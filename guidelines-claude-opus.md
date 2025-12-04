@@ -1183,7 +1183,7 @@ const defaultAdmin = {
 
 - [-] 项目初始化
 - [-] 数据库设计与实现
-- [ ] Express 服务器搭建
+- [-] Express 服务器搭建
 - [ ] JWT 认证系统
 - [ ] 基础 API 框架
 

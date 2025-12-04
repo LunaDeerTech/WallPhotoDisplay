@@ -5,6 +5,12 @@ import cors from 'cors'
 import history from 'connect-history-api-fallback'
 import dotenv from 'dotenv'
 
+// Import routes
+import authRoutes from './routes/auth.js'
+import userRoutes from './routes/users.js'
+import photoRoutes from './routes/photos.js'
+import tagRoutes from './routes/tags.js'
+
 // Load environment variables
 dotenv.config()
 
@@ -18,11 +24,11 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// API routes (to be implemented)
-// app.use('/api/auth', authRoutes)
-// app.use('/api/users', userRoutes)
-// app.use('/api/photos', photoRoutes)
-// app.use('/api/tags', tagRoutes)
+// API routes
+app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/photos', photoRoutes)
+app.use('/api/tags', tagRoutes)
 
 // Static files - uploaded photos
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
