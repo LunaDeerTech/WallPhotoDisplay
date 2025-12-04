@@ -9,47 +9,49 @@
     <div class="photo-manage-content">
       <!-- Toolbar -->
       <div class="toolbar">
-        <button
-          type="button"
-          class="toolbar-btn primary"
-          @click="showUploadDialog = true"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <span>上传图片</span>
-        </button>
-
-        <div class="toolbar-divider" />
-
-        <!-- Tag filter dropdown -->
-        <div class="filter-dropdown" ref="filterDropdownRef">
+        <template v-if="!isMultiSelectMode">
           <button
             type="button"
-            class="toolbar-btn"
-            :class="{ active: filterTags.length > 0 }"
-            @click="showFilterDropdown = !showFilterDropdown"
+            class="toolbar-btn primary"
+            @click="showUploadDialog = true"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <span>筛选{{ filterTags.length > 0 ? ` (${filterTags.length})` : '' }}</span>
+            <span>上传图片</span>
           </button>
-          <Transition name="dropdown">
-            <div v-if="showFilterDropdown" class="filter-panel">
-              <TagSelector
-                v-model:selectedTags="filterTags"
-                mode="all"
-                :limit="15"
-                :show-search="true"
-                :show-count="true"
-                empty-text="暂无标签"
-              />
-            </div>
-          </Transition>
-        </div>
+
+          <div class="toolbar-divider" />
+
+          <!-- Tag filter dropdown -->
+          <div class="filter-dropdown" ref="filterDropdownRef">
+            <button
+              type="button"
+              class="toolbar-btn"
+              :class="{ active: filterTags.length > 0 }"
+              @click="showFilterDropdown = !showFilterDropdown"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              <span>筛选{{ filterTags.length > 0 ? ` (${filterTags.length})` : '' }}</span>
+            </button>
+            <Transition name="dropdown">
+              <div v-if="showFilterDropdown" class="filter-panel">
+                <TagSelector
+                  v-model:selectedTags="filterTags"
+                  mode="all"
+                  :limit="15"
+                  :show-search="true"
+                  :show-count="true"
+                  empty-text="暂无标签"
+                />
+              </div>
+            </Transition>
+          </div>
+        </template>
 
         <div class="toolbar-spacer" />
 
