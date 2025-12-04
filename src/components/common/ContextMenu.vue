@@ -183,7 +183,8 @@ function close() {
 
 // Handle click outside
 function handleClickOutside(event) {
-  if (menuRef.value && !menuRef.value.contains(event.target)) {
+  // If menu ref is not available or click is outside the menu, close it
+  if (!menuRef.value || !menuRef.value.contains(event.target)) {
     close()
   }
 }
@@ -220,7 +221,8 @@ function handleClickOutsideContextMenu(event) {
   if (Date.now() - openTimestamp < 100) {
     return
   }
-  if (menuRef.value && !menuRef.value.contains(event.target)) {
+  // If menu ref is not available or click is outside the menu, close it
+  if (!menuRef.value || !menuRef.value.contains(event.target)) {
     close()
   }
 }
