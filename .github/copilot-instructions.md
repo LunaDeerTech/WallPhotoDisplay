@@ -1,8 +1,8 @@
-# PhotoWall - AI Coding Instructions
+# Wall Photo Display - AI Coding Instructions
 
 ## Project Overview
 
-PhotoWall is a multi-user photo wall PWA (Progressive Web App) with Vue 3 frontend and Express.js backend, using SQLite for data storage. See `guidelines-claude-opus.md` for complete specifications.
+Wall Photo Display is a multi-user photo wall PWA (Progressive Web App) with Vue 3 frontend and Express.js backend, using SQLite for data storage. See `guidelines-claude-opus.md` for complete specifications.
 
 ## 页面布局、设计、交互逻辑
 
@@ -30,7 +30,7 @@ PhotoWall is a multi-user photo wall PWA (Progressive Web App) with Vue 3 fronte
 ## Architecture
 
 ```
-photowall/
+wall-photo-display/
 ├── server/          # Express.js backend (API + static serving)
 │   ├── routes/      # API endpoints: auth, users, photos, tags
 │   ├── controllers/ # Business logic

@@ -1,12 +1,12 @@
 # Guidelines - Claude Opus
 
-# 照片墙系统项目计划书
+# 照片墙系统 Wall Photo Display 项目计划书
 
 ## 1. 项目概述
 
 ### 1.1 项目名称
 
-**PhotoWall** - 多用户照片墙系统
+**Wall Photo Display** - 多用户照片墙系统
 
 ### 1.2 项目简介
 
@@ -28,7 +28,7 @@
 ### 1.4 项目结构
 
 ```
-photowall/
+wall-photo-display/
 ├── package.json
 ├── vite.config. js
 ├── server/
