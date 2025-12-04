@@ -27,59 +27,67 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // 确保 uploads 目录存在
-const uploadsDir = path.join(__dirname, '../../data/uploads')
+const uploadsDir = process.env.UPLOAD_PATH ? process.env.UPLOAD_PATH : path.join(__dirname, '../../data/uploads')
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
   console.log('✓ 创建 uploads 目录')
 }
 
-// 导入数据库配置（这会创建数据库文件）
-import { initTables } from '../config/database.js'
-import User from '../models/User.js'
+// 使用动态 import 确保目录创建完成后再导入数据库模块
+// （静态 import 会被提升到文件顶部执行，导致目录不存在时数据库连接失败）
+async function main() {
+  // 导入数据库配置（这会创建数据库文件）
+  const { initTables, closeDatabase } = await import('../config/database.js')
+  const { default: User } = await import('../models/User.js')
 
-console.log('\n开始初始化数据库...\n')
+  console.log('\n开始初始化数据库...\n')
 
-// 初始化表结构
-try {
-  initTables()
-  console.log('✓ 数据库表结构创建成功')
-} catch (error) {
-  console.error('✗ 创建表结构失败:', error.message)
-  process.exit(1)
-}
-
-// 创建默认管理员账号
-const defaultAdmin = {
-  username: 'admin',
-  password: 'admin123',
-  displayName: '管理员',
-  role: 'admin'
-}
-
-try {
-  // 检查管理员是否已存在
-  if (User.existsByUsername(defaultAdmin.username)) {
-    console.log('✓ 默认管理员账号已存在，跳过创建')
-  } else {
-    const admin = User.create(defaultAdmin)
-    console.log('✓ 默认管理员账号创建成功')
-    console.log(`  用户名: ${admin.username}`)
-    console.log(`  密码: ${defaultAdmin.password}`)
-    console.log('\n  ⚠️  请在首次登录后立即修改密码！')
+  // 初始化表结构
+  try {
+    initTables()
+    console.log('✓ 数据库表结构创建成功')
+  } catch (error) {
+    console.error('✗ 创建表结构失败:', error.message)
+    process.exit(1)
   }
-} catch (error) {
-  console.error('✗ 创建管理员账号失败:', error.message)
-  process.exit(1)
+
+  // 创建默认管理员账号
+  const defaultAdmin = {
+    username: 'admin',
+    password: 'admin123',
+    displayName: '管理员',
+    role: 'admin'
+  }
+
+  try {
+    // 检查管理员是否已存在
+    if (User.existsByUsername(defaultAdmin.username)) {
+      console.log('✓ 默认管理员账号已存在，跳过创建')
+    } else {
+      const admin = User.create(defaultAdmin)
+      console.log('✓ 默认管理员账号创建成功')
+      console.log(`  用户名: ${admin.username}`)
+      console.log(`  密码: ${defaultAdmin.password}`)
+      console.log('\n  ⚠️  请在首次登录后立即修改密码！')
+    }
+  } catch (error) {
+    console.error('✗ 创建管理员账号失败:', error.message)
+    process.exit(1)
+  }
+
+  console.log('\n数据库初始化完成！\n')
+
+  // 输出统计信息
+  console.log('数据库统计:')
+  console.log(`  用户数量: ${User.count()}`)
+
+  // 关闭数据库连接
+  closeDatabase()
+
+  process.exit(0)
 }
 
-console.log('\n数据库初始化完成！\n')
-
-// 输出统计信息
-console.log('数据库统计:')
-console.log(`  用户数量: ${User.count()}`)
-
-// 关闭数据库连接
-import { closeDatabase } from '../config/database.js'
-closeDatabase()
-
-process.exit(0)
+main().catch(error => {
+  console.error('初始化失败:', error.message)
+  process.exit(1)
+})

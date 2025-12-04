@@ -9,9 +9,8 @@ dist/
 .env.local
 .env.*.local
 
-# Database
-data/*.db
-data/*.db-journal
+# User Data Path
+data/
 
 # Uploaded files (keep directory structure)
 uploads/photos/*
@@ -42,5 +41,3 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
-
-data/
