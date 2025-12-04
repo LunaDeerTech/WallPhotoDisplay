@@ -195,24 +195,39 @@ function handleKeydown(event) {
   }
 }
 
+// Track the timestamp when menu opens to prevent immediate close
+let openTimestamp = 0
+
 // Lifecycle
 watch(() => props.visible, (value) => {
   if (value) {
+    openTimestamp = Date.now()
     nextTick(() => {
       document.addEventListener('click', handleClickOutside)
-      document.addEventListener('contextmenu', handleClickOutside)
+      document.addEventListener('contextmenu', handleClickOutsideContextMenu)
       document.addEventListener('keydown', handleKeydown)
     })
   } else {
     document.removeEventListener('click', handleClickOutside)
-    document.removeEventListener('contextmenu', handleClickOutside)
+    document.removeEventListener('contextmenu', handleClickOutsideContextMenu)
     document.removeEventListener('keydown', handleKeydown)
   }
 })
 
+// Separate handler for contextmenu to prevent immediate close
+function handleClickOutsideContextMenu(event) {
+  // Ignore if this event happens within 100ms of opening (same event that opened the menu)
+  if (Date.now() - openTimestamp < 100) {
+    return
+  }
+  if (menuRef.value && !menuRef.value.contains(event.target)) {
+    close()
+  }
+}
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('contextmenu', handleClickOutside)
+  document.removeEventListener('contextmenu', handleClickOutsideContextMenu)
   document.removeEventListener('keydown', handleKeydown)
 })
 </script>

@@ -162,10 +162,11 @@
 
     <!-- Context menu -->
     <ContextMenu
-      v-model="contextMenu.visible"
+      :visible="contextMenu.visible"
       :x="contextMenu.x"
       :y="contextMenu.y"
       :items="contextMenuItems"
+      @update:visible="contextMenu.visible = $event"
       @select="handleContextMenuSelect"
     />
 
@@ -409,11 +410,11 @@ function handlePhotoContextMenu(event, photo) {
   }
 }
 
-function handleContextMenuSelect(itemId) {
+function handleContextMenuSelect(item) {
   const photo = contextMenu.value.targetPhoto
   contextMenu.value.visible = false
   
-  switch (itemId) {
+  switch (item.id) {
     case 'view':
       viewingPhoto.value = photo
       showViewer.value = true
