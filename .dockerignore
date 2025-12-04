@@ -1,0 +1,41 @@
+# 依赖目录
+node_modules
+
+# 构建输出
+dist
+
+# 数据目录
+data
+uploads
+
+# Git
+.git
+.gitignore
+
+# 开发配置
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 日志
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 测试
+coverage
+*.test.js
+*.spec.js
+
+# 文档（可选，如果想减小镜像可以排除）
+# docs
+# *.md

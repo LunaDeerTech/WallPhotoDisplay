@@ -1,0 +1,30 @@
+# Wall Photo Display - Docker Compose 配置
+# 使用方法: docker-compose up -d
+
+services:
+  photowall:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wall-photo-display
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # 持久化数据目录（数据库 + 上传文件）
+      - photowall-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-please-change-this-secret-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  photowall-data:
+    name: photowall-data
