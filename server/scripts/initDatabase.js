@@ -19,17 +19,18 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // 确保 data 目录存在
-const dataDir = path.join(__dirname, '../../data')
+const dataDir = process.env.DB_PATH ? path.dirname(process.env.DB_PATH) : path.join(__dirname, '../../data')
+console.log('数据库文件目录:', dataDir)
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true })
   console.log('✓ 创建 data 目录')
 }
 
-// 确保 uploads/photos 目录存在
-const uploadsDir = path.join(__dirname, '../../data/uploads/photos')
+// 确保 uploads 目录存在
+const uploadsDir = path.join(__dirname, '../../data/uploads')
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
-  console.log('✓ 创建 uploads/photos 目录')
+  console.log('✓ 创建 uploads 目录')
 }
 
 // 导入数据库配置（这会创建数据库文件）
