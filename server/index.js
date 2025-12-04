@@ -31,7 +31,9 @@ app.use('/api/photos', photoRoutes)
 app.use('/api/tags', tagRoutes)
 
 // Static files - uploaded photos
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+// Use UPLOAD_PATH from env or default to ../uploads
+const uploadPath = process.env.UPLOAD_PATH || path.join(__dirname, '../uploads')
+app.use('/uploads', express.static(uploadPath))
 
 // Vue SPA support - must be after API routes
 app.use(history())

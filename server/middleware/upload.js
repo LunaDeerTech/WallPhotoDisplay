@@ -7,8 +7,8 @@ import fs from 'fs'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// 上传目录
-const UPLOAD_PATH = process.env.UPLOAD_PATH || path.join(__dirname, '../../uploads/photos')
+// 上传目录 - 默认使用 data/uploads，与静态文件服务路径一致
+const UPLOAD_PATH = process.env.UPLOAD_PATH || path.join(__dirname, '../../data/uploads')
 
 // 确保上传目录存在
 if (!fs.existsSync(UPLOAD_PATH)) {

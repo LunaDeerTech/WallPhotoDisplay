@@ -129,8 +129,8 @@ const Photo = {
     // 获取每张图片的标签
     photos.forEach(photo => {
       photo.tags = this.getTags(photo.id)
-      photo.url = `/uploads/photos/${photo.filename}`
-      photo.thumbnailUrl = `/uploads/photos/thumb_${photo.filename}`
+      photo.url = `/uploads/${photo.filename}`
+      photo.thumbnailUrl = `/uploads/thumb_${photo.filename}`
     })
 
     return {
