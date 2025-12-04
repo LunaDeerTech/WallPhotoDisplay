@@ -1189,7 +1189,7 @@ const defaultAdmin = {
 
 ### 阶段二：核心功能 (Week 2-3)
 
-- [ ] 用户管理 API
+- [-] 用户管理 API
 - [ ] 图片上传/管理 API
 - [ ] 标签系统 API
 - [ ] Vue 基础组件
