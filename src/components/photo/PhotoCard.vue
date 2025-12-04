@@ -58,8 +58,8 @@
       <div class="photo-info-content">
         <!-- Tags -->
         <div v-if="photo.tags && photo.tags.length > 0" class="photo-tags">
-          <span v-for="tag in displayTags" :key="tag" class="photo-tag">
-            #{{ tag }}
+          <span v-for="tag in displayTags" :key="tag.id" class="photo-tag">
+            #{{ tag.name }}
           </span>
           <span v-if="photo.tags.length > maxDisplayTags" class="photo-tag-more">
             +{{ photo.tags.length - maxDisplayTags }}
@@ -93,60 +93,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
+import type { Photo } from '@/types'
 
-const props = defineProps({
-  photo: {
-    type: Object,
-    required: true
-    // Expected structure:
-    // {
-    //   id: number,
-    //   url: string,
-    //   thumbnailUrl?: string,
-    //   originalName?: string,
-    //   width: number,
-    //   height: number,
-    //   tags?: string[],
-    //   uploaderName?: string,
-    //   userId?: number
-    // }
-  },
-  selectable: {
-    type: Boolean,
-    default: false
-  },
-  selected: {
-    type: Boolean,
-    default: false
-  },
-  showInfo: {
-    type: Boolean,
-    default: true
-  },
-  showUploader: {
-    type: Boolean,
-    default: false
-  },
-  maxDisplayTags: {
-    type: Number,
-    default: 2
-  }
+interface Props {
+  photo: Photo
+  selectable?: boolean
+  selected?: boolean
+  showInfo?: boolean
+  showUploader?: boolean
+  maxDisplayTags?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  selectable: false,
+  selected: false,
+  showInfo: true,
+  showUploader: false,
+  maxDisplayTags: 2
 })
 
-const emit = defineEmits(['click', 'contextmenu', 'select', 'view', 'image-load'])
+const emit = defineEmits<{
+  'click': [photo: Photo]
+  'contextmenu': [event: MouseEvent, photo: Photo]
+  'select': [photo: Photo, selected: boolean]
+  'view': [photo: Photo]
+  'image-load': [photo: Photo]
+}>()
 
 // State
-const imgRef = ref(null)
+const imgRef = ref<HTMLImageElement | null>(null)
 const loading = ref(true)
 const imageError = ref(false)
 
 // Computed
-const thumbnailUrl = computed(() => {
-  return props.photo.thumbnailUrl || props.photo.url
-})
-
 // 图片 URL - 优先使用缩略图
 const imageUrl = computed(() => {
   return props.photo.thumbnailUrl || props.photo.url || ''
@@ -179,7 +160,7 @@ const containerStyle = computed(() => {
 })
 
 // Event handlers
-function handleClick(event) {
+function handleClick(_event: MouseEvent): void {
   if (props.selectable) {
     handleSelect()
   } else {
@@ -187,22 +168,22 @@ function handleClick(event) {
   }
 }
 
-function handleContextMenu(event) {
+function handleContextMenu(event: MouseEvent): void {
   emit('contextmenu', event, props.photo)
 }
 
-function handleSelect() {
+function handleSelect(): void {
   emit('select', props.photo, !props.selected)
 }
 
-function handleImageLoad() {
+function handleImageLoad(): void {
   loading.value = false
   imageError.value = false
   // Emit event for parent to potentially recalculate layout
   emit('image-load', props.photo)
 }
 
-function handleImageError() {
+function handleImageError(): void {
   loading.value = false
   imageError.value = true
 }

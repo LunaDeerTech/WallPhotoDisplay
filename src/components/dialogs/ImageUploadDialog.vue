@@ -109,6 +109,7 @@
       </Transition>
     </div>
 
+    <!-- @vue-ignore -->
     <template #footer>
       <div class="dialog-actions">
         <button
@@ -140,45 +141,60 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
 import TagInput from '../common/TagInput.vue'
-import photosApi from '../../api/photos.js'
+import photosApi from '@/api/photos'
+import type { Photo } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  modelValue?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
 })
 
-const emit = defineEmits(['update:modelValue', 'success'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'success': [photos: Photo[]]
+}>()
 
 // Constants
 const MAX_FILES = 20
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
+interface FileData {
+  file: File
+  name: string
+  size: number
+  type: string
+  preview: string
+  error: string | null
+  uploaded: boolean
+}
+
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const files = ref([])
-const tags = ref([])
+const files = ref<FileData[]>([])
+const tags = ref<string[]>([])
 const isDragging = ref(false)
 const uploading = ref(false)
 const uploadProgress = ref(0)
 const uploadError = ref('')
-const fileInputRef = ref(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 // Computed
 const validFiles = computed(() => files.value.filter(f => !f.error))
 
 // Cleanup Object URLs helper
-function cleanupPreviews() {
+function cleanupPreviews(): void {
   files.value.forEach(file => {
     if (file.preview && file.preview.startsWith('blob:')) {
       URL.revokeObjectURL(file.preview)
@@ -201,26 +217,27 @@ watch(isOpen, (newValue, oldValue) => {
 })
 
 // Trigger file select
-function triggerFileSelect() {
+function triggerFileSelect(): void {
   fileInputRef.value?.click()
 }
 
 // Handle file select from input
-function handleFileSelect(event) {
-  const selectedFiles = Array.from(event.target.files || [])
+function handleFileSelect(event: Event): void {
+  const target = event.target as HTMLInputElement
+  const selectedFiles = Array.from(target.files || [])
   addFiles(selectedFiles)
-  event.target.value = '' // Reset input
+  target.value = '' // Reset input
 }
 
 // Handle drop
-function handleDrop(event) {
+function handleDrop(event: DragEvent): void {
   isDragging.value = false
   const droppedFiles = Array.from(event.dataTransfer?.files || [])
   addFiles(droppedFiles)
 }
 
 // Add files with validation
-function addFiles(newFiles) {
+function addFiles(newFiles: File[]): void {
   const remainingSlots = MAX_FILES - files.value.length
   
   if (remainingSlots <= 0) {
@@ -231,7 +248,7 @@ function addFiles(newFiles) {
   uploadError.value = ''
   
   newFiles.slice(0, remainingSlots).forEach(file => {
-    const fileData = {
+    const fileData: FileData = {
       file,
       name: file.name,
       size: file.size,
@@ -259,7 +276,7 @@ function addFiles(newFiles) {
 }
 
 // Remove file
-function removeFile(index) {
+function removeFile(index: number): void {
   const file = files.value[index]
   if (file.preview && file.preview.startsWith('blob:')) {
     URL.revokeObjectURL(file.preview)
@@ -268,7 +285,7 @@ function removeFile(index) {
 }
 
 // Clear all files
-function clearFiles() {
+function clearFiles(): void {
   files.value.forEach(file => {
     if (file.preview && file.preview.startsWith('blob:')) {
       URL.revokeObjectURL(file.preview)
@@ -278,14 +295,14 @@ function clearFiles() {
 }
 
 // Handle close
-function handleClose() {
+function handleClose(): void {
   if (!uploading.value) {
     isOpen.value = false
   }
 }
 
 // Handle upload
-async function handleUpload() {
+async function handleUpload(): Promise<void> {
   if (uploading.value || validFiles.value.length === 0) return
   
   uploading.value = true
@@ -303,15 +320,18 @@ async function handleUpload() {
       }
     )
     
-    if (response.success) {
+    if (response.success && response.data) {
       // Mark all as uploaded
       files.value.forEach(f => {
         if (!f.error) f.uploaded = true
       })
       
+      // Save photos before setTimeout to preserve type narrowing
+      const uploadedPhotos = response.data.photos
+      
       // Emit success and close
       setTimeout(() => {
-        emit('success', response.data)
+        emit('success', uploadedPhotos)
         isOpen.value = false
       }, 500)
     } else {

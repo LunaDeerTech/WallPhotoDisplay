@@ -177,6 +177,7 @@
         </Transition>
       </form>
 
+      <!-- @vue-ignore -->
       <template #footer>
         <div class="dialog-actions">
           <button
@@ -228,6 +229,7 @@
         </Transition>
       </form>
 
+      <!-- @vue-ignore -->
       <template #footer>
         <div class="dialog-actions">
           <button
@@ -260,6 +262,7 @@
         确定要删除用户 <strong>{{ deleteTargetUser?.displayName || deleteTargetUser?.username }}</strong> 吗？<br />
         该用户上传的所有图片也将被删除，此操作不可撤销。
       </p>
+      <!-- @vue-ignore -->
       <template #footer>
         <div class="dialog-actions">
           <button type="button" class="btn btn-secondary" @click="showDeleteConfirm = false">
@@ -279,30 +282,47 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
 import Modal from '../common/Modal.vue'
-import { useAuthStore } from '../../stores/auth.js'
-import usersApi from '../../api/users.js'
+import { useAuthStore } from '@/stores/auth'
+import usersApi from '@/api/users'
+import type { User } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  modelValue?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+}>()
 
 const authStore = useAuthStore()
+
+type UserRole = 'admin' | 'user'
+
+interface AddUserForm {
+  username: string
+  displayName: string
+  password: string
+  role: UserRole
+}
+
+interface ResetPasswordForm {
+  newPassword: string
+}
 
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const users = ref([])
+const users = ref<User[]>([])
 const loading = ref(false)
 const searchKeyword = ref('')
 
@@ -310,7 +330,7 @@ const searchKeyword = ref('')
 const showAddUser = ref(false)
 const addUserLoading = ref(false)
 const addUserError = ref('')
-const addUserForm = reactive({
+const addUserForm = reactive<AddUserForm>({
   username: '',
   displayName: '',
   password: '',
@@ -321,15 +341,15 @@ const addUserForm = reactive({
 const showResetPassword = ref(false)
 const resetPasswordLoading = ref(false)
 const resetPasswordError = ref('')
-const resetPasswordUser = ref(null)
-const resetPasswordForm = reactive({
+const resetPasswordUser = ref<User | null>(null)
+const resetPasswordForm = reactive<ResetPasswordForm>({
   newPassword: ''
 })
 
 // Delete user state
 const showDeleteConfirm = ref(false)
 const deleteLoading = ref(false)
-const deleteTargetUser = ref(null)
+const deleteTargetUser = ref<User | null>(null)
 
 // Computed
 const filteredUsers = computed(() => {
@@ -380,13 +400,13 @@ watch(showResetPassword, (newValue) => {
 })
 
 // Fetch users
-async function fetchUsers() {
+async function fetchUsers(): Promise<void> {
   loading.value = true
   
   try {
     const response = await usersApi.getAll()
     
-    if (response.success) {
+    if (response.success && response.data) {
       users.value = response.data
     }
   } catch (error) {
@@ -397,7 +417,7 @@ async function fetchUsers() {
 }
 
 // Handle add user
-async function handleAddUser() {
+async function handleAddUser(): Promise<void> {
   if (!isAddUserFormValid.value || addUserLoading.value) return
   
   addUserLoading.value = true
@@ -425,13 +445,13 @@ async function handleAddUser() {
 }
 
 // Handle reset password
-function handleResetPassword(user) {
+function handleResetPassword(user: User): void {
   resetPasswordUser.value = user
   showResetPassword.value = true
 }
 
-async function confirmResetPassword() {
-  if (resetPasswordForm.newPassword.length < 6 || resetPasswordLoading.value) return
+async function confirmResetPassword(): Promise<void> {
+  if (resetPasswordForm.newPassword.length < 6 || resetPasswordLoading.value || !resetPasswordUser.value) return
   
   resetPasswordLoading.value = true
   resetPasswordError.value = ''
@@ -454,12 +474,12 @@ async function confirmResetPassword() {
 }
 
 // Handle delete user
-function handleDeleteUser(user) {
+function handleDeleteUser(user: User): void {
   deleteTargetUser.value = user
   showDeleteConfirm.value = true
 }
 
-async function confirmDeleteUser() {
+async function confirmDeleteUser(): Promise<void> {
   if (!deleteTargetUser.value || deleteLoading.value) return
   
   deleteLoading.value = true
@@ -480,7 +500,7 @@ async function confirmDeleteUser() {
 }
 
 // Handle close
-function handleClose() {
+function handleClose(): void {
   isOpen.value = false
 }
 </script>

@@ -165,39 +165,39 @@
   </Teleport>
 </template>
 
-<script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch, onUnmounted } from 'vue'
+import type { Photo } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  },
-  photos: {
-    type: Array,
-    default: () => []
-  },
-  initialIndex: {
-    type: Number,
-    default: 0
-  },
-  showThumbnails: {
-    type: Boolean,
-    default: true
-  }
+interface Props {
+  modelValue?: boolean
+  photos?: Photo[]
+  initialIndex?: number
+  showThumbnails?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false,
+  photos: () => [],
+  initialIndex: 0,
+  showThumbnails: true
 })
 
-const emit = defineEmits(['update:modelValue', 'close', 'change'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'close': []
+  'change': [index: number, photo: Photo]
+}>()
 
 // Refs
-const contentRef = ref(null)
-const imageRef = ref(null)
+const contentRef = ref<HTMLElement | null>(null)
+const imageRef = ref<HTMLImageElement | null>(null)
 
 // State
 const currentIndex = ref(props.initialIndex)
 const isLoading = ref(true)
 const isAnimating = ref(false)
-const slideDirection = ref('slide-left')
+const slideDirection = ref<'slide-left' | 'slide-right'>('slide-left')
 
 // Zoom state
 const scale = ref(1)
@@ -227,12 +227,12 @@ const imageStyle = computed(() => ({
 }))
 
 // Methods
-function close() {
+function close(): void {
   emit('update:modelValue', false)
   emit('close')
 }
 
-function prev() {
+function prev(): void {
   if (!hasPrev.value || isAnimating.value) return
   slideDirection.value = 'slide-right'
   isAnimating.value = true
@@ -241,7 +241,7 @@ function prev() {
   setTimeout(() => { isAnimating.value = false }, 300)
 }
 
-function next() {
+function next(): void {
   if (!hasNext.value || isAnimating.value) return
   slideDirection.value = 'slide-left'
   isAnimating.value = true
@@ -250,7 +250,7 @@ function next() {
   setTimeout(() => { isAnimating.value = false }, 300)
 }
 
-function goTo(index) {
+function goTo(index: number): void {
   if (index === currentIndex.value || isAnimating.value) return
   slideDirection.value = index > currentIndex.value ? 'slide-left' : 'slide-right'
   isAnimating.value = true
@@ -259,29 +259,29 @@ function goTo(index) {
   setTimeout(() => { isAnimating.value = false }, 300)
 }
 
-function zoomIn() {
+function zoomIn(): void {
   scale.value = Math.min(scale.value + zoomStep, maxScale)
 }
 
-function zoomOut() {
+function zoomOut(): void {
   scale.value = Math.max(scale.value - zoomStep, minScale)
   if (scale.value <= 1) {
     resetTransform()
   }
 }
 
-function resetZoom() {
+function resetZoom(): void {
   resetTransform()
 }
 
-function resetTransform() {
+function resetTransform(): void {
   scale.value = 1
   translateX.value = 0
   translateY.value = 0
 }
 
-function download() {
-  if (!currentPhoto.value) return
+function download(): void {
+  if (!currentPhoto.value || !currentPhoto.value.url) return
   
   const link = document.createElement('a')
   link.href = currentPhoto.value.url
@@ -293,15 +293,15 @@ function download() {
 }
 
 // Event handlers
-function handleImageLoad() {
+function handleImageLoad(): void {
   isLoading.value = false
 }
 
-function handleImageError() {
+function handleImageError(): void {
   isLoading.value = false
 }
 
-function handleWheel(event) {
+function handleWheel(event: WheelEvent): void {
   const delta = event.deltaY > 0 ? -zoomStep : zoomStep
   scale.value = Math.min(Math.max(scale.value + delta, minScale), maxScale)
   
@@ -310,7 +310,7 @@ function handleWheel(event) {
   }
 }
 
-function handleDragStart(event) {
+function handleDragStart(event: MouseEvent): void {
   if (scale.value <= 1) return
   
   isDragging.value = true
@@ -321,7 +321,7 @@ function handleDragStart(event) {
   document.addEventListener('mouseup', handleDragEnd)
 }
 
-function handleDragMove(event) {
+function handleDragMove(event: MouseEvent): void {
   if (!isDragging.value) return
   
   const dx = event.clientX - dragStart.value.x
@@ -331,14 +331,14 @@ function handleDragMove(event) {
   translateY.value = translateStart.value.y + dy
 }
 
-function handleDragEnd() {
+function handleDragEnd(): void {
   isDragging.value = false
   document.removeEventListener('mousemove', handleDragMove)
   document.removeEventListener('mouseup', handleDragEnd)
 }
 
 // Touch handlers
-function handleTouchStart(event) {
+function handleTouchStart(event: TouchEvent): void {
   if (event.touches.length !== 1 || scale.value <= 1) return
   
   isDragging.value = true
@@ -350,7 +350,7 @@ function handleTouchStart(event) {
   document.addEventListener('touchend', handleTouchEnd)
 }
 
-function handleTouchMove(event) {
+function handleTouchMove(event: TouchEvent): void {
   if (!isDragging.value || event.touches.length !== 1) return
   
   event.preventDefault()
@@ -362,14 +362,14 @@ function handleTouchMove(event) {
   translateY.value = translateStart.value.y + dy
 }
 
-function handleTouchEnd() {
+function handleTouchEnd(): void {
   isDragging.value = false
   document.removeEventListener('touchmove', handleTouchMove)
   document.removeEventListener('touchend', handleTouchEnd)
 }
 
 // Keyboard navigation
-function handleKeydown(event) {
+function handleKeydown(event: KeyboardEvent): void {
   if (!props.modelValue) return
   
   switch (event.key) {

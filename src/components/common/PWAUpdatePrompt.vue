@@ -20,17 +20,17 @@
   </Transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
 const needRefresh = ref(false)
-let updateSW = null
+let updateSW: ((reloadPage?: boolean) => Promise<void>) | null = null
 
-const closePrompt = () => {
+const closePrompt = (): void => {
   needRefresh.value = false
 }
 
-const updateServiceWorker = async () => {
+const updateServiceWorker = async (): Promise<void> => {
   if (updateSW) {
     await updateSW(true)
   }
@@ -51,7 +51,7 @@ onMounted(async () => {
         onOfflineReady() {
           console.log('应用已准备好离线使用')
         },
-        onRegisteredSW(swUrl, r) {
+        onRegisteredSW(swUrl: string, r?: ServiceWorkerRegistration) {
           console.log('Service Worker 已注册:', swUrl)
           // 定期检查更新 (每小时)
           if (r) {
@@ -60,7 +60,7 @@ onMounted(async () => {
             }, 60 * 60 * 1000)
           }
         },
-        onRegisterError(error) {
+        onRegisterError(error: Error) {
           console.error('Service Worker 注册失败:', error)
         }
       })

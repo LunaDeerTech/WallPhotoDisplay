@@ -193,41 +193,56 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
 import Modal from '../common/Modal.vue'
-import { useAuthStore } from '../../stores/auth.js'
-import usersApi from '../../api/users.js'
+import { useAuthStore } from '@/stores/auth'
+import usersApi from '@/api/users'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  modelValue?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+}>()
 
 const authStore = useAuthStore()
+
+type TabType = 'info' | 'password'
+
+interface InfoForm {
+  displayName: string
+}
+
+interface PasswordForm {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
 
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const activeTab = ref('info')
+const activeTab = ref<TabType>('info')
 const loading = ref(false)
 
 // Info form
-const infoForm = reactive({
+const infoForm = reactive<InfoForm>({
   displayName: ''
 })
 const infoError = ref('')
 const infoSuccess = ref(false)
 
 // Password form
-const passwordForm = reactive({
+const passwordForm = reactive<PasswordForm>({
   oldPassword: '',
   newPassword: '',
   confirmPassword: ''
@@ -271,13 +286,13 @@ watch(isOpen, (newValue) => {
 })
 
 // Handle close
-function handleClose() {
+function handleClose(): void {
   isOpen.value = false
 }
 
 // Handle update info
-async function handleUpdateInfo() {
-  if (!isInfoFormValid.value || loading.value) return
+async function handleUpdateInfo(): Promise<void> {
+  if (!isInfoFormValid.value || loading.value || !authStore.user) return
   
   loading.value = true
   infoError.value = ''
@@ -303,8 +318,8 @@ async function handleUpdateInfo() {
 }
 
 // Handle update password
-async function handleUpdatePassword() {
-  if (!isPasswordFormValid.value || loading.value) return
+async function handleUpdatePassword(): Promise<void> {
+  if (!isPasswordFormValid.value || loading.value || !authStore.user) return
   
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
     passwordError.value = '两次输入的密码不一致'

@@ -46,6 +46,7 @@
       <p class="confirm-message">
         确定要删除{{ deleteTargetPhotos.length > 1 ? `这 ${deleteTargetPhotos.length} 张图片` : '这张图片' }}吗？此操作不可撤销。
       </p>
+      <!-- @vue-ignore -->
       <template #footer>
         <div class="dialog-actions">
           <button type="button" class="btn btn-secondary" @click="dialogs.deleteConfirm = false">
@@ -60,7 +61,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import MainContent from './components/layout/MainContent.vue'
@@ -74,10 +75,11 @@ import PhotoManageDialog from './components/dialogs/PhotoManageDialog.vue'
 import ProfileDialog from './components/dialogs/ProfileDialog.vue'
 import UserManageDialog from './components/dialogs/UserManageDialog.vue'
 import TagEditDialog from './components/dialogs/TagEditDialog.vue'
-import { useTheme } from './composables/useTheme.js'
-import { useAuthStore } from './stores/auth.js'
-import { usePhotosStore } from './stores/photos.js'
-import photosApi from './api/photos.js'
+import { useTheme } from '@/composables/useTheme'
+import { useAuthStore } from '@/stores/auth'
+import { usePhotosStore } from '@/stores/photos'
+import photosApi from '@/api/photos'
+import type { Photo } from '@/types'
 
 // Initialize theme
 const { initTheme } = useTheme()
@@ -87,10 +89,20 @@ const authStore = useAuthStore()
 const photosStore = usePhotosStore()
 
 // Component refs
-const mainContentRef = ref(null)
+const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
 
 // Dialog states
-const dialogs = reactive({
+interface DialogStates {
+  login: boolean
+  browseSettings: boolean
+  photoManage: boolean
+  profile: boolean
+  userManage: boolean
+  tagEdit: boolean
+  deleteConfirm: boolean
+}
+
+const dialogs = reactive<DialogStates>({
   login: false,
   browseSettings: false,
   photoManage: false,
@@ -101,10 +113,10 @@ const dialogs = reactive({
 })
 
 // Tag edit state
-const tagEditPhotos = ref([])
+const tagEditPhotos = ref<Photo[]>([])
 
 // Delete state
-const deleteTargetPhotos = ref([])
+const deleteTargetPhotos = ref<Photo[]>([])
 const deleting = ref(false)
 
 // Initialize app
@@ -117,7 +129,9 @@ onMounted(async () => {
 })
 
 // Dialog handlers
-const handleOpenDialog = (dialogName) => {
+type DialogName = 'login' | 'browse-settings' | 'photo-manage' | 'profile' | 'user-manage'
+
+const handleOpenDialog = (dialogName: DialogName): void => {
   switch (dialogName) {
     case 'login':
       dialogs.login = true
@@ -138,42 +152,42 @@ const handleOpenDialog = (dialogName) => {
 }
 
 // Login success handler
-const handleLoginSuccess = () => {
+const handleLoginSuccess = (): void => {
   // Refresh photos to show user-specific content
   photosStore.fetchPhotos()
 }
 
 // Photo action handlers
-const handleEditTags = (photo) => {
+const handleEditTags = (photo: Photo): void => {
   tagEditPhotos.value = [photo]
   dialogs.tagEdit = true
 }
 
-const handleBatchEditTags = (photos) => {
+const handleBatchEditTags = (photos: Photo[]): void => {
   tagEditPhotos.value = photos
   dialogs.tagEdit = true
 }
 
-const handleTagEditSuccess = () => {
+const handleTagEditSuccess = (): void => {
   // Refresh photos to show updated tags
   photosStore.fetchPhotos()
   // Clear multi-select in main content if it exists
-  if (mainContentRef.value?.clearMultiSelect) {
-    mainContentRef.value.clearMultiSelect()
+  if (mainContentRef.value?.exitSelectionMode) {
+    mainContentRef.value.exitSelectionMode()
   }
 }
 
-const handleDelete = (photo) => {
+const handleDelete = (photo: Photo): void => {
   deleteTargetPhotos.value = [photo]
   dialogs.deleteConfirm = true
 }
 
-const handleBatchDelete = (photos) => {
+const handleBatchDelete = (photos: Photo[]): void => {
   deleteTargetPhotos.value = photos
   dialogs.deleteConfirm = true
 }
 
-const confirmDelete = async () => {
+const confirmDelete = async (): Promise<void> => {
   if (deleteTargetPhotos.value.length === 0 || deleting.value) return
   
   deleting.value = true
@@ -194,8 +208,8 @@ const confirmDelete = async () => {
     deleteTargetPhotos.value = []
     
     // Clear multi-select in main content
-    if (mainContentRef.value?.clearMultiSelect) {
-      mainContentRef.value.clearMultiSelect()
+    if (mainContentRef.value?.exitSelectionMode) {
+      mainContentRef.value.exitSelectionMode()
     }
   } catch (error) {
     console.error('Delete photos error:', error)

@@ -10,52 +10,46 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import ContextMenu from '../common/ContextMenu.vue'
-import { useAuthStore } from '../../stores/auth.js'
+import { useAuthStore } from '@/stores/auth'
+import type { Photo, ContextMenuItem } from '@/types'
 
-const props = defineProps({
-  visible: {
-    type: Boolean,
-    default: false
-  },
-  x: {
-    type: Number,
-    default: 0
-  },
-  y: {
-    type: Number,
-    default: 0
-  },
-  photo: {
-    type: Object,
-    default: null
-  },
-  selectionMode: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  visible?: boolean
+  x?: number
+  y?: number
+  photo?: Photo | null
+  selectionMode?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
+  x: 0,
+  y: 0,
+  photo: null,
+  selectionMode: false
 })
 
-const emit = defineEmits([
-  'update:visible',
-  'close',
-  'view',
-  'download',
-  'edit-tags',
-  'delete',
-  'multi-select',
-  'select'
-])
+const emit = defineEmits<{
+  'update:visible': [value: boolean]
+  'close': []
+  'view': [photo: Photo]
+  'download': [photo: Photo]
+  'edit-tags': [photo: Photo]
+  'delete': [photo: Photo]
+  'multi-select': []
+  'select': [photo: Photo]
+}>()
 
 const authStore = useAuthStore()
 
 // Computed menu items based on permissions
-const menuItems = computed(() => {
+const menuItems = computed((): ContextMenuItem[] => {
   if (!props.photo) return []
   
-  const items = []
+  const items: ContextMenuItem[] = []
   
   // Basic actions - available to all
   items.push({
@@ -75,7 +69,7 @@ const menuItems = computed(() => {
     (authStore.isLoggedIn && props.photo.userId === authStore.currentUserId)
   
   if (canEdit) {
-    items.push({ divider: true })
+    items.push({ id: 'divider1', label: '', divider: true })
     
     items.push({
       id: 'edit-tags',
@@ -93,7 +87,7 @@ const menuItems = computed(() => {
   
   // Admin-only actions
   if (authStore.isAdmin && !props.selectionMode) {
-    items.push({ divider: true })
+    items.push({ id: 'divider2', label: '', divider: true })
     
     items.push({
       id: 'multi-select',
@@ -111,7 +105,7 @@ const menuItems = computed(() => {
         label: '选中此图片',
         icon: 'check-square'
       },
-      { divider: true },
+      { id: 'divider3', label: '', divider: true },
       {
         id: 'view',
         label: '放大查看',
@@ -124,7 +118,9 @@ const menuItems = computed(() => {
 })
 
 // Handle menu item selection
-function handleSelect(item) {
+function handleSelect(item: ContextMenuItem): void {
+  if (!props.photo) return
+  
   switch (item.id) {
     case 'view':
       emit('view', props.photo)

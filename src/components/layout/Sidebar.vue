@@ -105,18 +105,22 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
-import { useAuthStore } from '../../stores/auth.js'
+import { useAuthStore } from '@/stores/auth'
+
+type DialogType = 'browse-settings' | 'photo-manage' | 'profile' | 'user-manage' | 'login'
 
 const authStore = useAuthStore()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const isAdmin = computed(() => authStore.isAdmin)
 
-defineEmits(['open-dialog'])
+const emit = defineEmits<{
+  'open-dialog': [dialog: DialogType]
+}>()
 
-const handleLogout = async () => {
+const handleLogout = async (): Promise<void> => {
   await authStore.logout()
 }
 </script>

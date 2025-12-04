@@ -8,7 +8,7 @@
         :loading="photosStore.loading"
         :has-more="photosStore.hasMore"
         :selectable="multiSelect.isSelectionMode.value"
-        :selected-ids="multiSelect.selectedIds.value"
+        :selected-ids="multiSelect.selectedIds.value as number[]"
         :show-uploader="true"
         @load-more="handleLoadMore"
         @photo-click="handlePhotoClick"
@@ -22,7 +22,7 @@
         v-model:visible="contextMenu.state.visible"
         :x="contextMenu.state.x"
         :y="contextMenu.state.y"
-        :photo="contextMenu.state.targetData"
+        :photo="contextMenu.state.targetData as Photo | null"
         :selection-mode="multiSelect.isSelectionMode.value"
         @view="handlePhotoView"
         @download="handleDownload"
@@ -81,17 +81,23 @@
   </main>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { usePhotosStore } from '../../stores/photos.js'
-import { useSettingsStore } from '../../stores/settings.js'
-import { useMultiSelect } from '../../composables/useMultiSelect.js'
-import { useContextMenu } from '../../composables/useContextMenu.js'
+import { usePhotosStore } from '@/stores/photos'
+import { useSettingsStore } from '@/stores/settings'
+import { useMultiSelect } from '@/composables/useMultiSelect'
+import { useContextMenu } from '@/composables/useContextMenu'
 import PhotoWaterfall from '../photo/PhotoWaterfall.vue'
 import PhotoViewer from '../photo/PhotoViewer.vue'
 import PhotoContextMenu from '../photo/PhotoContextMenu.vue'
+import type { Photo } from '@/types'
 
-const emit = defineEmits(['edit-tags', 'batch-edit-tags', 'delete', 'batch-delete'])
+const emit = defineEmits<{
+  'edit-tags': [photo: Photo]
+  'batch-edit-tags': [photos: Photo[]]
+  'delete': [photo: Photo]
+  'batch-delete': [photos: Photo[]]
+}>()
 
 const photosStore = usePhotosStore()
 const settingsStore = useSettingsStore()
@@ -100,7 +106,7 @@ const settingsStore = useSettingsStore()
 const contextMenu = useContextMenu()
 
 // Multi-select functionality
-const multiSelect = useMultiSelect({
+const multiSelect = useMultiSelect<Photo>({
   itemKey: 'id',
   onSelectionChange: (selection) => {
     console.log('Selection changed:', selection.count)
@@ -131,7 +137,7 @@ onMounted(() => {
 })
 
 // Fetch photos with current filters
-async function fetchPhotos() {
+async function fetchPhotos(): Promise<void> {
   await photosStore.fetchPhotos({
     tags: settingsStore.selectedTags,
     sort: settingsStore.sortBy
@@ -139,19 +145,19 @@ async function fetchPhotos() {
 }
 
 // Event handlers
-function handleLoadMore() {
+function handleLoadMore(): void {
   photosStore.loadMore()
 }
 
-function handlePhotoClick(photo) {
+function handlePhotoClick(photo: Photo): void {
   handlePhotoView(photo)
 }
 
-function handlePhotoContextMenu(event, photo) {
+function handlePhotoContextMenu(event: MouseEvent, photo: Photo): void {
   contextMenu.show(event, [], photo)
 }
 
-function handlePhotoSelect(photo, selected) {
+function handlePhotoSelect(photo: Photo, selected: boolean): void {
   if (selected) {
     multiSelect.select(photo)
   } else {
@@ -159,18 +165,19 @@ function handlePhotoSelect(photo, selected) {
   }
 }
 
-function handlePhotoView(photo) {
+function handlePhotoView(photo: Photo): void {
   const index = photosStore.photos.findIndex(p => p.id === photo.id)
   viewerInitialIndex.value = index >= 0 ? index : 0
   viewerVisible.value = true
 }
 
-function handleViewerChange(index, photo) {
+function handleViewerChange(_index: number, _photo: Photo): void {
   // Optional: preload adjacent images or update state
 }
 
-function handleDownload(photo) {
+function handleDownload(photo: Photo): void {
   const link = document.createElement('a')
+  if (!photo.url) return
   link.href = photo.url
   link.download = photo.originalName || `photo-${photo.id}`
   link.target = '_blank'
@@ -179,28 +186,28 @@ function handleDownload(photo) {
   document.body.removeChild(link)
 }
 
-function handleEditTags(photo) {
+function handleEditTags(photo: Photo): void {
   emit('edit-tags', photo)
 }
 
-function handleDelete(photo) {
+function handleDelete(photo: Photo): void {
   emit('delete', photo)
 }
 
-function handleEnterMultiSelect() {
+function handleEnterMultiSelect(): void {
   multiSelect.enterSelectionMode()
 }
 
-function handleSelectFromMenu(photo) {
+function handleSelectFromMenu(photo: Photo): void {
   multiSelect.select(photo)
 }
 
-function handleBatchEditTags() {
+function handleBatchEditTags(): void {
   const selectedPhotos = multiSelect.getSelectedItems()
   emit('batch-edit-tags', selectedPhotos)
 }
 
-function handleBatchDelete() {
+function handleBatchDelete(): void {
   const selectedPhotos = multiSelect.getSelectedItems()
   emit('batch-delete', selectedPhotos)
 }

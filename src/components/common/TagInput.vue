@@ -64,41 +64,39 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, watch, nextTick } from 'vue'
-import tagsApi from '../../api/tags.js'
+<script setup lang="ts">
+import { ref, computed, nextTick } from 'vue'
+import tagsApi from '@/api/tags'
+import type { Tag } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Array,
-    default: () => []
-  },
-  placeholder: {
-    type: String,
-    default: '输入 #标签名 添加标签'
-  },
-  hint: {
-    type: String,
-    default: '输入 # 开头的标签，空格确认'
-  },
-  maxTags: {
-    type: Number,
-    default: 20
-  },
-  allowCreate: {
-    type: Boolean,
-    default: true
-  }
+interface Props {
+  modelValue?: string[]
+  placeholder?: string
+  hint?: string
+  maxTags?: number
+  allowCreate?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: () => [],
+  placeholder: '输入 #标签名 添加标签',
+  hint: '输入 # 开头的标签，空格确认',
+  maxTags: 20,
+  allowCreate: true
 })
 
-const emit = defineEmits(['update:modelValue', 'tag-added', 'tag-removed'])
+const emit = defineEmits<{
+  'update:modelValue': [value: string[]]
+  'tag-added': [tag: string]
+  'tag-removed': [tag: string]
+}>()
 
 // Refs
-const inputRef = ref(null)
+const inputRef = ref<HTMLInputElement | null>(null)
 const inputValue = ref('')
 const isFocused = ref(false)
-const suggestions = ref([])
-const searchDebounceTimer = ref(null)
+const suggestions = ref<Tag[]>([])
+const searchDebounceTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 // Computed
 const showSuggestions = computed(() => {
@@ -106,15 +104,15 @@ const showSuggestions = computed(() => {
 })
 
 // Focus the input
-function focusInput() {
+function focusInput(): void {
   inputRef.value?.focus()
 }
 
 // Parse tags from input text
-function parseTags(input) {
+function parseTags(input: string): string[] {
   const regex = /#([^\s#]+)/g
   const matches = input.matchAll(regex)
-  const tags = new Set()
+  const tags = new Set<string>()
   
   for (const match of matches) {
     const tag = match[1].trim()
@@ -127,7 +125,7 @@ function parseTags(input) {
 }
 
 // Handle input changes
-function handleInput() {
+function handleInput(): void {
   // Check if we should search for suggestions
   if (inputValue.value.startsWith('#') && inputValue.value.length > 1) {
     const keyword = inputValue.value.slice(1) // Remove #
@@ -148,7 +146,7 @@ function handleInput() {
 }
 
 // Debounced search
-function debouncedSearch(keyword) {
+function debouncedSearch(keyword: string): void {
   if (searchDebounceTimer.value) {
     clearTimeout(searchDebounceTimer.value)
   }
@@ -156,10 +154,10 @@ function debouncedSearch(keyword) {
   searchDebounceTimer.value = setTimeout(async () => {
     try {
       const response = await tagsApi.searchTags(keyword, 5)
-      if (response.success) {
+      if (response.success && response.data) {
         // Filter out already selected tags
         suggestions.value = response.data.filter(
-          tag => !props.modelValue.includes(tag.name)
+          (tag: Tag) => !props.modelValue.includes(tag.name)
         )
       }
     } catch (error) {
@@ -169,7 +167,7 @@ function debouncedSearch(keyword) {
 }
 
 // Handle keydown events
-function handleKeydown(event) {
+function handleKeydown(event: KeyboardEvent): void {
   // Backspace to remove last tag when input is empty
   if (event.key === 'Backspace' && inputValue.value === '' && props.modelValue.length > 0) {
     const lastTag = props.modelValue[props.modelValue.length - 1]
@@ -205,7 +203,7 @@ function handleKeydown(event) {
 }
 
 // Handle blur
-function handleBlur() {
+function handleBlur(): void {
   // Delay to allow suggestion click
   setTimeout(() => {
     isFocused.value = false
@@ -221,7 +219,7 @@ function handleBlur() {
 }
 
 // Add tags
-function addTags(tags) {
+function addTags(tags: string[]): void {
   if (props.modelValue.length >= props.maxTags) return
   
   const newTags = tags.filter(tag => !props.modelValue.includes(tag))
@@ -239,7 +237,7 @@ function addTags(tags) {
 }
 
 // Remove a tag
-function removeTag(tag) {
+function removeTag(tag: string): void {
   const updatedTags = props.modelValue.filter(t => t !== tag)
   emit('update:modelValue', updatedTags)
   emit('tag-removed', tag)
@@ -251,7 +249,7 @@ function removeTag(tag) {
 }
 
 // Select a suggestion
-function selectSuggestion(suggestion) {
+function selectSuggestion(suggestion: Tag): void {
   addTags([suggestion.name])
   inputValue.value = ''
   suggestions.value = []

@@ -91,59 +91,50 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import tagsApi from '../../api/tags.js'
+import tagsApi from '@/api/tags'
+import type { Tag } from '@/types'
 
-const props = defineProps({
-  selectedTags: {
-    type: Array,
-    default: () => []
-  },
-  mode: {
-    type: String,
-    default: 'random', // 'random' | 'all' | 'search'
-    validator: (value) => ['random', 'all', 'search'].includes(value)
-  },
-  limit: {
-    type: Number,
-    default: 10
-  },
-  showSearch: {
-    type: Boolean,
-    default: false
-  },
-  showCount: {
-    type: Boolean,
-    default: true
-  },
-  showSelectedSummary: {
-    type: Boolean,
-    default: false
-  },
-  wrap: {
-    type: Boolean,
-    default: true
-  },
-  multiSelect: {
-    type: Boolean,
-    default: true
-  },
-  emptyText: {
-    type: String,
-    default: '暂无标签'
-  }
+type SelectorMode = 'random' | 'all' | 'search'
+
+interface Props {
+  selectedTags?: string[]
+  mode?: SelectorMode
+  limit?: number
+  showSearch?: boolean
+  showCount?: boolean
+  showSelectedSummary?: boolean
+  wrap?: boolean
+  multiSelect?: boolean
+  emptyText?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  selectedTags: () => [],
+  mode: 'random',
+  limit: 10,
+  showSearch: false,
+  showCount: true,
+  showSelectedSummary: false,
+  wrap: true,
+  multiSelect: true,
+  emptyText: '暂无标签'
 })
 
-const emit = defineEmits(['select', 'toggle', 'update:selectedTags'])
+const emit = defineEmits<{
+  'select': [tagName: string]
+  'toggle': [tagName: string]
+  'update:selectedTags': [tags: string[]]
+}>()
 
 // State
-const tags = ref([])
+const tags = ref<Tag[]>([])
 const loading = ref(false)
 const searchKeyword = ref('')
 const page = ref(1)
 const hasMore = ref(false)
-const searchDebounceTimer = ref(null)
+const searchDebounceTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 // Computed
 const skeletonCount = computed(() => Math.min(props.limit, 6))
@@ -156,11 +147,11 @@ const displayedTags = computed(() => {
 })
 
 // Methods
-function isSelected(tagName) {
+function isSelected(tagName: string): boolean {
   return props.selectedTags.includes(tagName)
 }
 
-function toggleTag(tag) {
+function toggleTag(tag: Tag): void {
   if (props.multiSelect) {
     const newSelected = isSelected(tag.name)
       ? props.selectedTags.filter(t => t !== tag.name)
@@ -174,7 +165,7 @@ function toggleTag(tag) {
   }
 }
 
-async function fetchTags() {
+async function fetchTags(): Promise<void> {
   loading.value = true
   
   try {
@@ -186,7 +177,7 @@ async function fetchTags() {
       response = await tagsApi.getAllTags()
     }
     
-    if (response.success) {
+    if (response.success && response.data) {
       tags.value = response.data
       hasMore.value = props.mode === 'all' && response.data.length > props.limit
     }
@@ -197,7 +188,7 @@ async function fetchTags() {
   }
 }
 
-async function searchTags(keyword) {
+async function searchTags(keyword: string): Promise<void> {
   if (!keyword) {
     fetchTags()
     return
@@ -207,7 +198,7 @@ async function searchTags(keyword) {
   
   try {
     const response = await tagsApi.searchTags(keyword, 20)
-    if (response.success) {
+    if (response.success && response.data) {
       tags.value = response.data
       hasMore.value = false
     }
@@ -233,7 +224,7 @@ function loadMore() {
   hasMore.value = displayedTags.value.length < tags.value.length
 }
 
-async function refresh() {
+async function refresh(): Promise<void> {
   page.value = 1
   searchKeyword.value = ''
   await fetchTags()

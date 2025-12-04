@@ -67,6 +67,7 @@
       </Transition>
     </form>
 
+    <!-- @vue-ignore -->
     <template #footer>
       <div class="dialog-actions">
         <button
@@ -95,29 +96,38 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
-import { useAuthStore } from '../../stores/auth.js'
+import { useAuthStore } from '@/stores/auth'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  modelValue?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
 })
 
-const emit = defineEmits(['update:modelValue', 'success'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'success': []
+}>()
 
 const authStore = useAuthStore()
+
+interface LoginForm {
+  username: string
+  password: string
+}
 
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const form = ref({
+const form = ref<LoginForm>({
   username: '',
   password: ''
 })
@@ -141,14 +151,14 @@ watch(isOpen, (newValue) => {
 })
 
 // Handle close
-function handleClose() {
+function handleClose(): void {
   if (!loading.value) {
     isOpen.value = false
   }
 }
 
 // Handle submit
-async function handleSubmit() {
+async function handleSubmit(): Promise<void> {
   if (!isFormValid.value || loading.value) return
 
   loading.value = true

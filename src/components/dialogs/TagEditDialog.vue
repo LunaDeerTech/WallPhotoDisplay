@@ -38,7 +38,7 @@
           <div class="photo-info">
             <span class="photo-name">{{ photos[0].originalName }}</span>
             <span class="photo-tags" v-if="photos[0].tags?.length">
-              {{ photos[0].tags.map(t => '#' + t).join(' ') }}
+              {{ photos[0].tags.map(t => '#' + t.name).join(' ') }}
             </span>
           </div>
         </div>
@@ -62,6 +62,7 @@
       </div>
     </div>
 
+    <!-- @vue-ignore -->
     <template #footer>
       <div class="dialog-actions">
         <button
@@ -85,47 +86,50 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
 import TagInput from '../common/TagInput.vue'
 import TagSelector from '../common/TagSelector.vue'
-import photosApi from '../../api/photos.js'
+import photosApi from '@/api/photos'
+import type { Photo } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  },
-  photos: {
-    type: Array,
-    default: () => []
-  }
+interface Props {
+  modelValue?: boolean
+  photos?: Photo[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false,
+  photos: () => []
 })
 
-const emit = defineEmits(['update:modelValue', 'success'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'success': []
+}>()
 
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const currentTags = ref([])
+const currentTags = ref<string[]>([])
 const saving = ref(false)
 
 // Initialize tags when dialog opens
 watch(isOpen, (newValue) => {
   if (newValue && props.photos.length > 0) {
     if (props.photos.length === 1) {
-      // Single photo: use its current tags
-      currentTags.value = [...(props.photos[0].tags || [])]
+      // Single photo: use its current tags (extract names from Tag objects)
+      currentTags.value = (props.photos[0].tags || []).map(tag => tag.name)
     } else {
-      // Multiple photos: find common tags
-      const tagSets = props.photos.map(p => new Set(p.tags || []))
+      // Multiple photos: find common tags by name
+      const tagSets = props.photos.map(p => new Set((p.tags || []).map(t => t.name)))
       const firstSet = tagSets[0]
-      const commonTags = [...firstSet].filter(tag =>
-        tagSets.every(set => set.has(tag))
+      const commonTags = [...firstSet].filter(tagName =>
+        tagSets.every(set => set.has(tagName))
       )
       currentTags.value = commonTags
     }
@@ -135,14 +139,14 @@ watch(isOpen, (newValue) => {
 })
 
 // Handle close
-function handleClose() {
+function handleClose(): void {
   if (!saving.value) {
     isOpen.value = false
   }
 }
 
 // Handle save
-async function handleSave() {
+async function handleSave(): Promise<void> {
   if (saving.value || props.photos.length === 0) return
   
   saving.value = true

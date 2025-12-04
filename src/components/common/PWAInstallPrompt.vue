@@ -18,18 +18,23 @@
   </Transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 const showInstallPrompt = ref(false)
-let deferredPrompt = null
+let deferredPrompt: BeforeInstallPromptEvent | null = null
 
 // 处理 beforeinstallprompt 事件
-const handleBeforeInstallPrompt = (e) => {
+const handleBeforeInstallPrompt = (e: Event): void => {
   // 阻止默认的安装提示
   e.preventDefault()
   // 保存事件以便稍后触发
-  deferredPrompt = e
+  deferredPrompt = e as BeforeInstallPromptEvent
   
   // 检查用户是否之前已经关闭过提示
   const dismissed = localStorage.getItem('pwa-install-dismissed')
@@ -43,7 +48,7 @@ const handleBeforeInstallPrompt = (e) => {
 }
 
 // 安装应用
-const installApp = async () => {
+const installApp = async (): Promise<void> => {
   if (!deferredPrompt) return
   
   // 显示安装提示
@@ -64,13 +69,13 @@ const installApp = async () => {
 }
 
 // 关闭提示
-const dismissPrompt = () => {
+const dismissPrompt = (): void => {
   showInstallPrompt.value = false
   localStorage.setItem('pwa-install-dismissed', Date.now().toString())
 }
 
 // 监听应用安装完成
-const handleAppInstalled = () => {
+const handleAppInstalled = (): void => {
   showInstallPrompt.value = false
   deferredPrompt = null
   console.log('PWA 已安装')

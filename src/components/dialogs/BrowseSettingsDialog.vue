@@ -134,6 +134,7 @@
       </div>
     </div>
 
+    <!-- @vue-ignore -->
     <template #footer>
       <div class="dialog-actions">
         <button
@@ -164,21 +165,25 @@
   </Modal>
 </template>
 
-<script setup>
-import { ref, computed, watch, reactive } from 'vue'
+<script setup lang="ts">
+import { computed, watch, reactive } from 'vue'
 import Modal from '../common/Modal.vue'
 import TagSelector from '../common/TagSelector.vue'
-import { useSettingsStore } from '../../stores/settings.js'
-import { useTheme } from '../../composables/useTheme.js'
+import { useSettingsStore } from '@/stores/settings'
+import { useTheme } from '@/composables/useTheme'
+import type { ThemeMode, SortBy } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  modelValue?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+}>()
 
 const settingsStore = useSettingsStore()
 const { applyTheme } = useTheme()
@@ -186,10 +191,18 @@ const { applyTheme } = useTheme()
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const localSettings = reactive({
+interface LocalSettings {
+  columns: number
+  sortBy: SortBy
+  theme: ThemeMode
+  customAccentColor: string
+  selectedTags: string[]
+}
+
+const localSettings = reactive<LocalSettings>({
   columns: 4,
   sortBy: 'created_at_desc',
   theme: 'system',
@@ -200,20 +213,30 @@ const localSettings = reactive({
 // Options
 const columnOptions = [2, 3, 4, 5, 6]
 
-const sortOptions = [
+interface SortOption {
+  value: SortBy
+  label: string
+}
+
+const sortOptions: SortOption[] = [
   { value: 'created_at_desc', label: '最新优先' },
   { value: 'created_at_asc', label: '最早优先' },
   { value: 'random', label: '随机排序' }
 ]
 
-const themeOptions = [
+interface ThemeOption {
+  value: ThemeMode
+  label: string
+}
+
+const themeOptions: ThemeOption[] = [
   { value: 'light', label: '浅色' },
   { value: 'dark', label: '深色' },
   { value: 'system', label: '跟随系统' },
   { value: 'custom', label: '自定义' }
 ]
 
-const presetColors = [
+const presetColors: string[] = [
   '#007AFF', // iOS Blue
   '#5856D6', // Purple
   '#AF52DE', // Violet
@@ -238,12 +261,12 @@ watch(isOpen, (newValue) => {
 })
 
 // Handle close
-function handleClose() {
+function handleClose(): void {
   isOpen.value = false
 }
 
 // Handle save
-function handleSave() {
+function handleSave(): void {
   settingsStore.setColumns(localSettings.columns)
   settingsStore.setSortBy(localSettings.sortBy)
   settingsStore.setTheme(localSettings.theme)
@@ -251,17 +274,13 @@ function handleSave() {
   settingsStore.setSelectedTags(localSettings.selectedTags)
   
   // Apply theme
-  if (localSettings.theme === 'custom') {
-    applyTheme(localSettings.customAccentColor)
-  } else {
-    applyTheme(localSettings.theme)
-  }
+  applyTheme(localSettings.theme)
   
   isOpen.value = false
 }
 
 // Reset to defaults
-function resetToDefaults() {
+function resetToDefaults(): void {
   localSettings.columns = 4
   localSettings.sortBy = 'created_at_desc'
   localSettings.theme = 'system'

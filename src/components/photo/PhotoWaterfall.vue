@@ -71,86 +71,78 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+<script setup lang="ts">
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import PhotoCard from './PhotoCard.vue'
+import type { Photo } from '@/types'
 
-const props = defineProps({
-  photos: {
-    type: Array,
-    default: () => []
-  },
-  columns: {
-    type: Number,
-    default: 4
-  },
-  gap: {
-    type: Number,
-    default: 16
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  },
-  hasMore: {
-    type: Boolean,
-    default: true
-  },
-  selectable: {
-    type: Boolean,
-    default: false
-  },
-  selectedIds: {
-    type: Array,
-    default: () => []
-  },
-  showInfo: {
-    type: Boolean,
-    default: true
-  },
-  showUploader: {
-    type: Boolean,
-    default: false
-  },
-  emptyText: {
-    type: String,
-    default: '试试上传一些照片吧'
-  }
+interface ItemPosition {
+  x: number
+  y: number
+  width: number
+  height: number
+  columnIndex: number
+}
+
+interface Props {
+  photos?: Photo[]
+  columns?: number
+  gap?: number
+  loading?: boolean
+  hasMore?: boolean
+  selectable?: boolean
+  selectedIds?: number[]
+  showInfo?: boolean
+  showUploader?: boolean
+  emptyText?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  photos: () => [],
+  columns: 4,
+  gap: 16,
+  loading: false,
+  hasMore: true,
+  selectable: false,
+  selectedIds: () => [],
+  showInfo: true,
+  showUploader: false,
+  emptyText: '试试上传一些照片吧'
 })
 
-const emit = defineEmits([
-  'load-more',
-  'photo-click',
-  'photo-contextmenu',
-  'photo-select',
-  'photo-view'
-])
+const emit = defineEmits<{
+  'load-more': []
+  'photo-click': [photo: Photo]
+  'photo-contextmenu': [event: MouseEvent, photo: Photo]
+  'photo-select': [photo: Photo, selected: boolean]
+  'photo-view': [photo: Photo]
+}>()
 
 // Refs
-const containerRef = ref(null)
-const gridRef = ref(null)
-const loadMoreTrigger = ref(null)
+const containerRef = ref<HTMLElement | null>(null)
+const gridRef = ref<HTMLElement | null>(null)
+const loadMoreTrigger = ref<HTMLElement | null>(null)
 
 // State
-const columnHeights = ref([])
-const itemPositions = ref(new Map())
+const columnHeights = ref<number[]>([])
+const itemPositions = ref<Map<number, ItemPosition>>(new Map())
 const containerHeight = ref(0)
 const columnWidth = ref(0)
 
 // Initialize column heights
-function initColumnHeights() {
+function initColumnHeights(): void {
   columnHeights.value = new Array(props.columns).fill(0)
 }
 
 // Get shortest column index
-function getShortestColumnIndex() {
+function getShortestColumnIndex(): number {
   if (columnHeights.value.length === 0) return 0
   const minHeight = Math.min(...columnHeights.value)
   return columnHeights.value.indexOf(minHeight)
 }
 
 // Calculate column width
-function calculateColumnWidth() {
+function calculateColumnWidth(): number {
   if (!gridRef.value) return 0
   const gridWidth = gridRef.value.clientWidth
   const totalGap = props.gap * (props.columns - 1)
@@ -159,7 +151,7 @@ function calculateColumnWidth() {
 }
 
 // Calculate layout for all photos
-function calculateLayout() {
+function calculateLayout(): void {
   if (!gridRef.value || props.photos.length === 0) {
     containerHeight.value = 0
     return
@@ -180,7 +172,7 @@ function calculateLayout() {
     const y = columnHeights.value[columnIndex]
 
     // Calculate height based on aspect ratio
-    let itemHeight
+    let itemHeight: number
     if (photo.width && photo.height) {
       itemHeight = (photo.height / photo.width) * width
     } else {
@@ -206,12 +198,12 @@ function calculateLayout() {
 }
 
 // Get item style based on calculated position
-function getItemStyle(photo) {
+function getItemStyle(photo: Photo) {
   const position = itemPositions.value.get(photo.id)
   if (!position) {
     // Fallback: calculate on-the-fly if not yet calculated
     return {
-      position: 'absolute',
+      position: 'absolute' as const,
       left: '0px',
       top: '0px',
       width: `${columnWidth.value || 200}px`,
@@ -220,7 +212,7 @@ function getItemStyle(photo) {
   }
   
   return {
-    position: 'absolute',
+    position: 'absolute' as const,
     left: `${position.x}px`,
     top: `${position.y}px`,
     width: `${position.width}px`,
@@ -230,37 +222,37 @@ function getItemStyle(photo) {
 }
 
 // Check if photo is selected
-function isSelected(photoId) {
+function isSelected(photoId: number): boolean {
   return props.selectedIds.includes(photoId)
 }
 
 // Handle image load - recalculate if needed
-function handleImageLoad(photo) {
+function handleImageLoad(_photo: Photo): void {
   // If the photo has dimensions, no need to recalculate
   // Otherwise, we might need to recalculate
 }
 
 // Event handlers
-function handlePhotoClick(photo) {
+function handlePhotoClick(photo: Photo): void {
   emit('photo-click', photo)
 }
 
-function handlePhotoContextMenu(event, photo) {
+function handlePhotoContextMenu(event: MouseEvent, photo: Photo): void {
   emit('photo-contextmenu', event, photo)
 }
 
-function handlePhotoSelect(photo, selected) {
+function handlePhotoSelect(photo: Photo, selected: boolean): void {
   emit('photo-select', photo, selected)
 }
 
-function handlePhotoView(photo) {
+function handlePhotoView(photo: Photo): void {
   emit('photo-view', photo)
 }
 
 // Intersection Observer for infinite scroll
-let observer = null
+let observer: IntersectionObserver | null = null
 
-function setupIntersectionObserver() {
+function setupIntersectionObserver(): void {
   if (!loadMoreTrigger.value) return
   
   observer = new IntersectionObserver(
@@ -280,7 +272,7 @@ function setupIntersectionObserver() {
   observer.observe(loadMoreTrigger.value)
 }
 
-function destroyIntersectionObserver() {
+function destroyIntersectionObserver(): void {
   if (observer) {
     observer.disconnect()
     observer = null
@@ -288,8 +280,8 @@ function destroyIntersectionObserver() {
 }
 
 // Resize handler with debounce
-let resizeTimer = null
-function handleResize() {
+let resizeTimer: ReturnType<typeof setTimeout> | null = null
+function handleResize(): void {
   if (resizeTimer) {
     clearTimeout(resizeTimer)
   }
@@ -299,9 +291,9 @@ function handleResize() {
 }
 
 // Setup resize observer
-let resizeObserver = null
+let resizeObserver: ResizeObserver | null = null
 
-function setupResizeObserver() {
+function setupResizeObserver(): void {
   if (!gridRef.value || typeof ResizeObserver === 'undefined') return
   
   resizeObserver = new ResizeObserver(() => {
@@ -311,7 +303,7 @@ function setupResizeObserver() {
   resizeObserver.observe(gridRef.value)
 }
 
-function destroyResizeObserver() {
+function destroyResizeObserver(): void {
   if (resizeObserver) {
     resizeObserver.disconnect()
     resizeObserver = null

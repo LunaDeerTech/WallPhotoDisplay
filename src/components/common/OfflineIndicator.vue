@@ -11,12 +11,12 @@
   </Transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const isOffline = ref(!navigator.onLine)
 
-const updateOnlineStatus = () => {
+const updateOnlineStatus = (): void => {
   isOffline.value = !navigator.onLine
 }
 

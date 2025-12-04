@@ -198,6 +198,7 @@
       <p class="confirm-message">
         确定要删除{{ deleteTargetPhotos.length > 1 ? `这 ${deleteTargetPhotos.length} 张图片` : '这张图片' }}吗？此操作不可撤销。
       </p>
+      <!-- @vue-ignore -->
       <template #footer>
         <div class="dialog-actions">
           <button type="button" class="btn btn-secondary" @click="showDeleteConfirm = false">
@@ -212,7 +213,7 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Modal from '../common/Modal.vue'
 import TagSelector from '../common/TagSelector.vue'
@@ -220,36 +221,54 @@ import ContextMenu from '../common/ContextMenu.vue'
 import PhotoViewer from '../photo/PhotoViewer.vue'
 import TagEditDialog from './TagEditDialog.vue'
 import ImageUploadDialog from './ImageUploadDialog.vue'
-import photosApi from '../../api/photos.js'
+import photosApi from '@/api/photos'
+import type { Photo, ContextMenuItem } from '@/types'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+interface Props {
+  modelValue?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+}>()
+
+interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+interface ContextMenuState {
+  visible: boolean
+  x: number
+  y: number
+  targetPhoto: Photo | null
+}
 
 // Local state
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const photos = ref([])
+const photos = ref<Photo[]>([])
 const loading = ref(false)
-const pagination = ref({ page: 1, limit: 20, total: 0, totalPages: 0 })
-const filterTags = ref([])
+const pagination = ref<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 })
+const filterTags = ref<string[]>([])
 const showFilterDropdown = ref(false)
-const filterDropdownRef = ref(null)
+const filterDropdownRef = ref<HTMLElement | null>(null)
 
 // Multi-select state
 const isMultiSelectMode = ref(false)
-const selectedPhotos = ref([])
+const selectedPhotos = ref<Photo[]>([])
 
 // Context menu state
-const contextMenu = ref({
+const contextMenu = ref<ContextMenuState>({
   visible: false,
   x: 0,
   y: 0,
@@ -258,25 +277,25 @@ const contextMenu = ref({
 
 // Dialog states
 const showViewer = ref(false)
-const viewingPhoto = ref(null)
+const viewingPhoto = ref<Photo | null>(null)
 const showTagEdit = ref(false)
-const tagEditPhotos = ref([])
+const tagEditPhotos = ref<Photo[]>([])
 const showUploadDialog = ref(false)
 const showDeleteConfirm = ref(false)
-const deleteTargetPhotos = ref([])
+const deleteTargetPhotos = ref<Photo[]>([])
 const deleting = ref(false)
 
 // Refs
-const photosContainerRef = ref(null)
+const photosContainerRef = ref<HTMLElement | null>(null)
 
 // Computed
 const hasMore = computed(() => pagination.value.page < pagination.value.totalPages)
 
-const contextMenuItems = computed(() => {
-  const items = [
+const contextMenuItems = computed((): ContextMenuItem[] => {
+  const items: ContextMenuItem[] = [
     { id: 'view', label: '放大查看', icon: 'zoom-in' },
     { id: 'edit-tags', label: '编辑标签', icon: 'tag' },
-    { divider: true },
+    { id: 'divider1', label: '', divider: true },
     { id: 'delete', label: '删除', icon: 'trash', danger: true }
   ]
   
@@ -315,18 +334,18 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-function handleClickOutside(event) {
-  if (filterDropdownRef.value && !filterDropdownRef.value.contains(event.target)) {
+function handleClickOutside(event: MouseEvent): void {
+  if (filterDropdownRef.value && !filterDropdownRef.value.contains(event.target as Node)) {
     showFilterDropdown.value = false
   }
 }
 
 // Fetch photos
-async function fetchPhotos() {
+async function fetchPhotos(): Promise<void> {
   loading.value = true
   
   try {
-    const params = {
+    const params: { page: number; limit: number; tags?: string } = {
       page: pagination.value.page,
       limit: pagination.value.limit
     }
@@ -337,7 +356,7 @@ async function fetchPhotos() {
     
     const response = await photosApi.getMyPhotos(params)
     
-    if (response.success) {
+    if (response.success && response.data) {
       if (pagination.value.page === 1) {
         photos.value = response.data.photos
       } else {
@@ -353,7 +372,7 @@ async function fetchPhotos() {
 }
 
 // Load more on scroll
-async function handleScroll() {
+async function handleScroll(): Promise<void> {
   if (!hasMore.value || loading.value) return
   
   const container = photosContainerRef.value
@@ -367,21 +386,21 @@ async function handleScroll() {
 }
 
 // Multi-select
-function enterMultiSelectMode() {
+function enterMultiSelectMode(): void {
   isMultiSelectMode.value = true
   selectedPhotos.value = []
 }
 
-function exitMultiSelectMode() {
+function exitMultiSelectMode(): void {
   isMultiSelectMode.value = false
   selectedPhotos.value = []
 }
 
-function isPhotoSelected(photoId) {
+function isPhotoSelected(photoId: number): boolean {
   return selectedPhotos.value.some(p => p.id === photoId)
 }
 
-function togglePhotoSelection(photo) {
+function togglePhotoSelection(photo: Photo): void {
   const index = selectedPhotos.value.findIndex(p => p.id === photo.id)
   if (index === -1) {
     selectedPhotos.value.push(photo)
@@ -391,7 +410,7 @@ function togglePhotoSelection(photo) {
 }
 
 // Photo click
-function handlePhotoClick(photo) {
+function handlePhotoClick(photo: Photo): void {
   if (isMultiSelectMode.value) {
     togglePhotoSelection(photo)
   } else {
@@ -401,7 +420,7 @@ function handlePhotoClick(photo) {
 }
 
 // Context menu
-function handlePhotoContextMenu(event, photo) {
+function handlePhotoContextMenu(event: MouseEvent, photo: Photo): void {
   contextMenu.value = {
     visible: true,
     x: event.clientX,
@@ -410,9 +429,11 @@ function handlePhotoContextMenu(event, photo) {
   }
 }
 
-function handleContextMenuSelect(item) {
+function handleContextMenuSelect(item: ContextMenuItem): void {
   const photo = contextMenu.value.targetPhoto
   contextMenu.value.visible = false
+  
+  if (!photo) return
   
   switch (item.id) {
     case 'view':
@@ -435,18 +456,18 @@ function handleContextMenuSelect(item) {
 }
 
 // Batch operations
-function handleBatchEditTags() {
+function handleBatchEditTags(): void {
   tagEditPhotos.value = [...selectedPhotos.value]
   showTagEdit.value = true
 }
 
-function handleBatchDelete() {
+function handleBatchDelete(): void {
   deleteTargetPhotos.value = [...selectedPhotos.value]
   showDeleteConfirm.value = true
 }
 
 // Delete confirmation
-async function confirmDelete() {
+async function confirmDelete(): Promise<void> {
   if (deleteTargetPhotos.value.length === 0) return
   
   deleting.value = true
@@ -474,21 +495,21 @@ async function confirmDelete() {
 }
 
 // Success handlers
-function handleTagEditSuccess() {
+function handleTagEditSuccess(): void {
   // Refresh photos to get updated tags
   pagination.value.page = 1
   fetchPhotos()
   exitMultiSelectMode()
 }
 
-function handleUploadSuccess() {
+function handleUploadSuccess(): void {
   // Refresh photos
   pagination.value.page = 1
   fetchPhotos()
 }
 
 // Close handler
-function handleClose() {
+function handleClose(): void {
   isOpen.value = false
 }
 </script>

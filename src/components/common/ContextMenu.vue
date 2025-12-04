@@ -42,43 +42,32 @@
   </Teleport>
 </template>
 
-<script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
+import type { ContextMenuItem } from '@/types'
 
-const props = defineProps({
-  visible: {
-    type: Boolean,
-    default: false
-  },
-  x: {
-    type: Number,
-    default: 0
-  },
-  y: {
-    type: Number,
-    default: 0
-  },
-  items: {
-    type: Array,
-    default: () => []
-    // Item structure:
-    // {
-    //   id: string,
-    //   label: string,
-    //   icon?: string,
-    //   shortcut?: string,
-    //   disabled?: boolean,
-    //   danger?: boolean,
-    //   divider?: boolean,
-    //   action?: () => void
-    // }
-  }
+interface Props {
+  visible?: boolean
+  x?: number
+  y?: number
+  items?: ContextMenuItem[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
+  x: 0,
+  y: 0,
+  items: () => []
 })
 
-const emit = defineEmits(['update:visible', 'select', 'close'])
+const emit = defineEmits<{
+  'update:visible': [value: boolean]
+  'select': [item: ContextMenuItem]
+  'close': []
+}>()
 
 // Refs
-const menuRef = ref(null)
+const menuRef = ref<HTMLElement | null>(null)
 
 // Computed position with boundary detection
 const menuStyle = computed(() => {
@@ -112,8 +101,8 @@ const menuStyle = computed(() => {
 })
 
 // Get icon SVG string by name
-function getIconSvg(iconName) {
-  const icons = {
+function getIconSvg(iconName: string): string {
+  const icons: Record<string, string> = {
     'zoom-in': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/>
       <path d="M21 21l-4.35-4.35"/>
@@ -162,7 +151,7 @@ function getIconSvg(iconName) {
 }
 
 // Handle item click
-function handleItemClick(item) {
+function handleItemClick(item: ContextMenuItem): void {
   if (item.disabled) return
   
   emit('select', item)
@@ -175,21 +164,21 @@ function handleItemClick(item) {
 }
 
 // Close the menu
-function close() {
+function close(): void {
   emit('update:visible', false)
   emit('close')
 }
 
 // Handle click outside
-function handleClickOutside(event) {
+function handleClickOutside(event: MouseEvent): void {
   // If menu ref is not available or click is outside the menu, close it
-  if (!menuRef.value || !menuRef.value.contains(event.target)) {
+  if (!menuRef.value || !menuRef.value.contains(event.target as Node)) {
     close()
   }
 }
 
 // Handle ESC key
-function handleKeydown(event) {
+function handleKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape' && props.visible) {
     close()
   }
@@ -215,13 +204,13 @@ watch(() => props.visible, (value) => {
 })
 
 // Separate handler for contextmenu to prevent immediate close
-function handleClickOutsideContextMenu(event) {
+function handleClickOutsideContextMenu(event: MouseEvent): void {
   // Ignore if this event happens within 100ms of opening (same event that opened the menu)
   if (Date.now() - openTimestamp < 100) {
     return
   }
   // If menu ref is not available or click is outside the menu, close it
-  if (!menuRef.value || !menuRef.value.contains(event.target)) {
+  if (!menuRef.value || !menuRef.value.contains(event.target as Node)) {
     close()
   }
 }

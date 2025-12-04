@@ -46,54 +46,47 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, watch, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  },
-  title: {
-    type: String,
-    default: ''
-  },
-  subtitle: {
-    type: String,
-    default: ''
-  },
-  size: {
-    type: String,
-    default: 'md',
-    validator: (value) => ['sm', 'md', 'lg', 'xl'].includes(value)
-  },
-  showClose: {
-    type: Boolean,
-    default: true
-  },
-  showHeader: {
-    type: Boolean,
-    default: true
-  },
-  closeOnOverlay: {
-    type: Boolean,
-    default: true
-  },
-  closeOnEsc: {
-    type: Boolean,
-    default: true
-  },
-  scrollable: {
-    type: Boolean,
-    default: true
-  },
-  fullscreen: {
-    type: Boolean,
-    default: false
-  }
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
+
+interface Props {
+  modelValue?: boolean
+  title?: string
+  subtitle?: string
+  size?: ModalSize
+  showClose?: boolean
+  showHeader?: boolean
+  closeOnOverlay?: boolean
+  closeOnEsc?: boolean
+  scrollable?: boolean
+  fullscreen?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false,
+  title: '',
+  subtitle: '',
+  size: 'md',
+  showClose: true,
+  showHeader: true,
+  closeOnOverlay: true,
+  closeOnEsc: true,
+  scrollable: true,
+  fullscreen: false
 })
 
-const emit = defineEmits(['update:modelValue', 'close'])
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'close': []
+}>()
+
+// Define slots for type checking
+const slots = defineSlots<{
+  default(props: Record<string, never>): unknown
+  footer(props: Record<string, never>): unknown
+}>()
 
 // Generate unique ID for accessibility
 const titleId = computed(() => `modal-title-${Math.random().toString(36).substr(2, 9)}`)
@@ -115,7 +108,7 @@ function handleClose() {
 }
 
 // Handle ESC key
-function handleKeydown(event) {
+function handleKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape' && props.closeOnEsc && props.modelValue) {
     handleClose()
   }
