@@ -1,5 +1,10 @@
 <template>
   <div class="app">
+    <!-- PWA Components -->
+    <OfflineIndicator />
+    <PWAInstallPrompt />
+    <PWAUpdatePrompt />
+    
     <MainContent
       ref="mainContentRef"
       @edit-tags="handleEditTags"
@@ -60,6 +65,9 @@ import { ref, reactive, onMounted } from 'vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import MainContent from './components/layout/MainContent.vue'
 import Modal from './components/common/Modal.vue'
+import PWAInstallPrompt from './components/common/PWAInstallPrompt.vue'
+import PWAUpdatePrompt from './components/common/PWAUpdatePrompt.vue'
+import OfflineIndicator from './components/common/OfflineIndicator.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
 import PhotoManageDialog from './components/dialogs/PhotoManageDialog.vue'
