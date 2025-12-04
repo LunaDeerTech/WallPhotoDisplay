@@ -177,14 +177,26 @@ const fileInputRef = ref(null)
 // Computed
 const validFiles = computed(() => files.value.filter(f => !f.error))
 
-// Reset when dialog opens
-watch(isOpen, (newValue) => {
+// Cleanup Object URLs helper
+function cleanupPreviews() {
+  files.value.forEach(file => {
+    if (file.preview && file.preview.startsWith('blob:')) {
+      URL.revokeObjectURL(file.preview)
+    }
+  })
+}
+
+// Reset when dialog opens/closes
+watch(isOpen, (newValue, oldValue) => {
   if (newValue) {
     files.value = []
     tags.value = []
     uploadError.value = ''
     uploadProgress.value = 0
     isDragging.value = false
+  } else if (oldValue) {
+    // Cleanup Object URLs when closing
+    cleanupPreviews()
   }
 })
 
@@ -238,12 +250,8 @@ function addFiles(newFiles) {
       fileData.error = '超过 10MB'
     }
     else {
-      // Create preview
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        fileData.preview = e.target.result
-      }
-      reader.readAsDataURL(file)
+      // Create preview using URL.createObjectURL for immediate display
+      fileData.preview = URL.createObjectURL(file)
     }
     
     files.value.push(fileData)
@@ -252,11 +260,20 @@ function addFiles(newFiles) {
 
 // Remove file
 function removeFile(index) {
+  const file = files.value[index]
+  if (file.preview && file.preview.startsWith('blob:')) {
+    URL.revokeObjectURL(file.preview)
+  }
   files.value.splice(index, 1)
 }
 
 // Clear all files
 function clearFiles() {
+  files.value.forEach(file => {
+    if (file.preview && file.preview.startsWith('blob:')) {
+      URL.revokeObjectURL(file.preview)
+    }
+  })
   files.value = []
 }
 
