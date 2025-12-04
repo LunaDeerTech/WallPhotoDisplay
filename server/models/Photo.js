@@ -184,13 +184,13 @@ const Photo = {
       if (tags && tags.length > 0) {
         const insertTagStmt = db.prepare('INSERT OR IGNORE INTO tags (name) VALUES (?)')
         const getTagIdStmt = db.prepare('SELECT id FROM tags WHERE name = ?')
-        const insertPhotoTagStmt = db.prepare('INSERT INTO photo_tags (photo_id, tag_id) VALUES (?, ?)')
+        const insertPhotoTagStmt = db.prepare('INSERT OR IGNORE INTO photo_tags (photo_id, tag_id) VALUES (?, ?)')
 
-        for (const tagName of tags) {
-          const trimmedName = tagName.trim()
-          if (!trimmedName) continue
-          
-          // 确保标签存在
+        // 使用 Set 去重，避免重复标签
+        const uniqueTags = [...new Set(tags.map(t => t.trim()).filter(t => t))]
+        
+        for (const trimmedName of uniqueTags) {
+          // 确保标签存在（如果不存在则自动创建）
           insertTagStmt.run(trimmedName)
           
           // 获取标签 ID
