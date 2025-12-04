@@ -94,6 +94,21 @@
           hint="标签将应用到所有上传的图片"
           :allow-create="true"
         />
+        
+        <div v-if="recommendedTags.length > 0" class="recommended-tags">
+          <span class="recommended-label">推荐标签：</span>
+          <div class="tags-wrapper">
+            <button
+              v-for="tag in recommendedTags"
+              :key="tag.id"
+              type="button"
+              class="tag-chip"
+              @click="addRecommendedTag(tag.name)"
+            >
+              #{{ tag.name }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Upload error -->
@@ -146,6 +161,7 @@ import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
 import TagInput from '../common/TagInput.vue'
 import photosApi from '@/api/photos'
+import tagsApi, { type TagWithCount } from '@/api/tags'
 import type { Photo } from '@/types'
 
 interface Props {
@@ -189,6 +205,7 @@ const uploading = ref(false)
 const uploadProgress = ref(0)
 const uploadError = ref('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const recommendedTags = ref<TagWithCount[]>([])
 
 // Computed
 const validFiles = computed(() => files.value.filter(f => !f.error))
@@ -210,11 +227,31 @@ watch(isOpen, (newValue, oldValue) => {
     uploadError.value = ''
     uploadProgress.value = 0
     isDragging.value = false
+    fetchRecommendedTags()
   } else if (oldValue) {
     // Cleanup Object URLs when closing
     cleanupPreviews()
   }
 })
+
+// Fetch recommended tags
+async function fetchRecommendedTags() {
+  try {
+    const res = await tagsApi.getRandomTags(10)
+    if (res.success && res.data) {
+      recommendedTags.value = res.data
+    }
+  } catch (e) {
+    console.error('Failed to fetch recommended tags', e)
+  }
+}
+
+// Add recommended tag
+function addRecommendedTag(tagName: string) {
+  if (!tags.value.includes(tagName)) {
+    tags.value.push(tagName)
+  }
+}
 
 // Trigger file select
 function triggerFileSelect(): void {
@@ -651,5 +688,41 @@ async function handleUpload(): Promise<void> {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Recommended tags */
+.recommended-tags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.recommended-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.tag-chip {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tag-chip:hover {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-color: var(--color-accent);
 }
 </style>
