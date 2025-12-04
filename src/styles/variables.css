@@ -1,0 +1,106 @@
+:root {
+  /* Colors - iOS-style Light theme (default) */
+  /* Primary blue accent - inspired by iOS */
+  --color-accent: #007AFF;
+  --color-accent-hover: #0056CC;
+  --color-accent-active: #004AAD;
+  --color-accent-light: rgba(0, 122, 255, 0.1);
+  --color-accent-lighter: rgba(0, 122, 255, 0.05);
+  
+  /* Background colors - clean whites and light grays */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f7f7f7;
+  --color-bg-tertiary: #f2f2f7;
+  --color-bg-elevated: #ffffff;
+  
+  /* Text colors */
+  --color-text-primary: #1c1c1e;
+  --color-text-secondary: #6e6e73;
+  --color-text-muted: #aeaeb2;
+  --color-text-placeholder: #c7c7cc;
+  
+  /* Border colors */
+  --color-border: #d1d1d6;
+  --color-border-light: #e5e5ea;
+  --color-separator: rgba(60, 60, 67, 0.12);
+  
+  /* Overlay and shadows */
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-shadow-medium: rgba(0, 0, 0, 0.12);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.16);
+  
+  /* iOS-style shadows */
+  --shadow-sm: 0 1px 3px var(--color-shadow);
+  --shadow-md: 0 2px 8px var(--color-shadow-medium);
+  --shadow-lg: 0 4px 16px var(--color-shadow-medium);
+  --shadow-xl: 0 8px 32px var(--color-shadow-heavy);
+  --shadow-hover: 0 4px 12px var(--color-shadow-medium);
+  --shadow-active: 0 1px 4px var(--color-shadow);
+  
+  /* Status colors - iOS style */
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-error: #FF3B30;
+  --color-info: #5AC8FA;
+  
+  /* Spacing - generous for iOS feel */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-section: 20px;
+  
+  /* Border radius - iOS rounded corners */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-xxl: 24px;
+  --radius-round: 50%;
+  --radius-pill: 9999px;
+  
+  /* Transitions - smooth iOS-like animations */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Typography - San Francisco style */
+  --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-xxl: 24px;
+  --font-size-title: 28px;
+  --font-size-largetitle: 34px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* Z-index layers */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+  --z-tooltip: 600;
+  
+  /* Sidebar */
+  --sidebar-width: 72px;
+  --sidebar-expanded-width: 220px;
+  
+  /* Photo grid */
+  --photo-gap: 16px;
+  --photo-card-radius: 12px;
+}

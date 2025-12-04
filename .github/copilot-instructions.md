@@ -4,10 +4,15 @@
 
 Wall Photo Display is a multi-user photo wall PWA (Progressive Web App) with Vue 3 frontend and Express.js backend, using SQLite for data storage. See `guidelines-claude-opus.md` for complete specifications.
 
+## Main Styles
+
+整体风格设计采用类似 iOS 的简洁风格，配色以蓝色为主色调，辅以白色和浅灰色。按钮、输入框等交互元素采用圆角设计，悬浮和点击时有轻微阴影效果。整体界面注重留白，避免过度拥挤。
+
 ## 页面布局、设计、交互逻辑
 
 ### 左侧边栏
 从上往下依次是 浏览设置、管理图片、个人信息、用户管理。其中在未登录时仅 浏览设置 可见，登陆后才会显示 管理图片、个人信息，登陆的是管理员账号则会再增加一个用户管理。按钮点击后通过浮窗的方式展示各按钮内容。
+如果是移动端则改为底部导航栏，图标大小适当增大。
 
 ### 主内容区域
 以瀑布流展示图片，栏数、要展示的图片分类根据 浏览设置 中选择的内容决定。点击图片可以放大显示。右键图片可以弹出菜单：放大、下载。如果是自己上传的图片，菜单则额外显示：编辑标签、删除。对于管理员，所有图片都可以编辑或删除，因此菜单中额外增加一个 多选。编辑标签采用弹出式窗口。
