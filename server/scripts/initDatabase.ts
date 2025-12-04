@@ -37,8 +37,8 @@ if (!fs.existsSync(uploadsDir)) {
 // （静态 import 会被提升到文件顶部执行，导致目录不存在时数据库连接失败）
 async function main() {
   // 导入数据库配置（这会创建数据库文件）
-  const { initTables, closeDatabase } = await import('../config/database.js')
-  const { default: User } = await import('../models/User.js')
+  const { initTables, closeDatabase } = await import('../config/database.ts')
+  const { default: User } = await import('../models/User.ts')
 
   console.log('\n开始初始化数据库...\n')
 
@@ -47,7 +47,7 @@ async function main() {
     initTables()
     console.log('✓ 数据库表结构创建成功')
   } catch (error) {
-    console.error('✗ 创建表结构失败:', error.message)
+    console.error('✗ 创建表结构失败:', (error as Error).message)
     process.exit(1)
   }
 
@@ -56,7 +56,7 @@ async function main() {
     username: 'admin',
     password: 'admin123',
     displayName: '管理员',
-    role: 'admin'
+    role: 'admin' as const
   }
 
   try {
@@ -65,13 +65,17 @@ async function main() {
       console.log('✓ 默认管理员账号已存在，跳过创建')
     } else {
       const admin = User.create(defaultAdmin)
-      console.log('✓ 默认管理员账号创建成功')
-      console.log(`  用户名: ${admin.username}`)
-      console.log(`  密码: ${defaultAdmin.password}`)
-      console.log('\n  ⚠️  请在首次登录后立即修改密码！')
+      if (admin) {
+        console.log('✓ 默认管理员账号创建成功')
+        console.log(`  用户名: ${admin.username}`)
+        console.log(`  密码: ${defaultAdmin.password}`)
+        console.log('\n  ⚠️  请在首次登录后立即修改密码！')
+      } else {
+        throw new Error('创建管理员账号返回空值')
+      }
     }
   } catch (error) {
-    console.error('✗ 创建管理员账号失败:', error.message)
+    console.error('✗ 创建管理员账号失败:', (error as Error).message)
     process.exit(1)
   }
 
