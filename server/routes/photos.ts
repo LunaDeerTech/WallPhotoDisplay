@@ -9,9 +9,9 @@ import {
   deletePhoto,
   batchDeletePhotos,
   batchUpdateTags
-} from '../controllers/photoController.ts'
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.ts'
-import { uploadMultiple, handleUploadError } from '../middleware/upload.ts'
+} from '../controllers/photoController.js'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.js'
+import { uploadMultiple, handleUploadError } from '../middleware/upload.js'
 
 const router = Router()
 

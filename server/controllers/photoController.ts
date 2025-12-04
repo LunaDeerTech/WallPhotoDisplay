@@ -1,9 +1,9 @@
 import type { Response } from 'express'
-import { Photo } from '../models/index.ts'
-import { deleteUploadedFile } from '../middleware/upload.ts'
+import { Photo } from '../models/index.js'
+import { deleteUploadedFile } from '../middleware/upload.js'
 import sharp from 'sharp'
 import path from 'path'
-import type { AuthenticatedRequest, PhotoQueryParams, MulterFile } from '../types/index.ts'
+import type { AuthenticatedRequest, PhotoQueryParams, MulterFile } from '../types/index.js'
 
 // 请求体类型定义
 interface TagsUpdateBody {

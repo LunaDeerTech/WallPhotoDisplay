@@ -7,8 +7,8 @@ import {
   updateUser,
   deleteUser,
   updatePassword
-} from '../controllers/userController.ts'
-import { authMiddleware, adminMiddleware } from '../middleware/auth.ts'
+} from '../controllers/userController.js'
+import { authMiddleware, adminMiddleware } from '../middleware/auth.js'
 
 const router = Router()
 

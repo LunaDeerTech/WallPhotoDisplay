@@ -126,10 +126,11 @@ npm run dev
 
 ### 生产部署
 
-1. **构建前端**
+1. **构建前后端**
 
 ```bash
 npm run build
+npm run build:server
 ```
 
 2. **启动生产服务器**

@@ -2,7 +2,7 @@ import type { Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import dotenv from 'dotenv'
-import type { AuthenticatedRequest, JwtPayload } from '../types/index.ts'
+import type { AuthenticatedRequest, JwtPayload } from '../types/index.js'
 
 dotenv.config()
 

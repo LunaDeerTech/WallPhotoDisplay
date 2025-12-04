@@ -1,5 +1,5 @@
-import db from '../config/database.ts'
-import type { PhotoCreateInput, PhotoQueryParams, PhotoPaginatedResult, PaginationInfo } from '../types/index.ts'
+import db from '../config/database.js'
+import type { PhotoCreateInput, PhotoQueryParams, PhotoPaginatedResult, PaginationInfo } from '../types/index.js'
 
 // 数据库返回的照片行类型
 interface PhotoRow {

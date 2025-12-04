@@ -1,6 +1,6 @@
 import express from 'express'
 const Router = express.Router
-import { getAllTags, getRandomTags, searchTags } from '../controllers/tagController.ts'
+import { getAllTags, getRandomTags, searchTags } from '../controllers/tagController.js'
 
 const router = Router()
 
