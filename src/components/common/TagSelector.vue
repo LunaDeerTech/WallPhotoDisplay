@@ -17,7 +17,7 @@
 
     <!-- Tags list -->
     <div class="tags-container" :class="{ 'tags-wrap': wrap }">
-      <TransitionGroup name="tag-list" tag="div" class="tags-list">
+      <div class="tags-list">
         <!-- Loading skeleton -->
         <template v-if="loading">
           <div
@@ -58,7 +58,7 @@
             {{ emptyText }}
           </p>
         </template>
-      </TransitionGroup>
+      </div>
 
       <!-- Load more button -->
       <button
@@ -461,25 +461,5 @@ defineExpose({
 .summary-tag svg {
   width: 12px;
   height: 12px;
-}
-
-/* Tag list transitions */
-.tag-list-enter-active,
-.tag-list-leave-active {
-  transition: all 0.3s ease;
-}
-
-.tag-list-enter-from {
-  opacity: 0;
-  transform: scale(0.8);
-}
-
-.tag-list-leave-to {
-  opacity: 0;
-  transform: scale(0.8);
-}
-
-.tag-list-move {
-  transition: transform 0.3s ease;
 }
 </style>
