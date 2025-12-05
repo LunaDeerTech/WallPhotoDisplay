@@ -108,30 +108,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Tag filter -->
-      <div class="setting-group">
-        <div class="setting-header">
-          <label class="setting-label">标签筛选</label>
-          <button
-            v-if="localSettings.selectedTags.length > 0"
-            type="button"
-            class="clear-tags-btn"
-            @click="localSettings.selectedTags = []"
-          >
-            清空
-          </button>
-        </div>
-        <TagSelector
-          v-model:selectedTags="localSettings.selectedTags"
-          mode="all"
-          :limit="20"
-          :show-search="true"
-          :show-count="true"
-          :show-selected-summary="true"
-          empty-text="暂无可用标签"
-        />
-      </div>
     </div>
 
     <!-- @vue-ignore -->
@@ -199,15 +175,13 @@ interface LocalSettings {
   sortBy: SortBy
   theme: ThemeMode
   customAccentColor: string
-  selectedTags: string[]
 }
 
 const localSettings = reactive<LocalSettings>({
   columns: 4,
   sortBy: 'created_at_desc',
   theme: 'system',
-  customAccentColor: '#007AFF',
-  selectedTags: []
+  customAccentColor: '#007AFF'
 })
 
 // Options
@@ -256,7 +230,6 @@ watch(isOpen, (newValue) => {
     localSettings.sortBy = settingsStore.sortBy
     localSettings.theme = settingsStore.theme
     localSettings.customAccentColor = settingsStore.customAccentColor
-    localSettings.selectedTags = [...settingsStore.selectedTags]
   }
 })
 
@@ -271,7 +244,6 @@ function handleSave(): void {
   settingsStore.setSortBy(localSettings.sortBy)
   settingsStore.setTheme(localSettings.theme)
   settingsStore.setCustomAccentColor(localSettings.customAccentColor)
-  settingsStore.setSelectedTags(localSettings.selectedTags)
   
   // Apply theme
   applyTheme(localSettings.theme)
@@ -285,7 +257,6 @@ function resetToDefaults(): void {
   localSettings.sortBy = 'created_at_desc'
   localSettings.theme = 'system'
   localSettings.customAccentColor = '#007AFF'
-  localSettings.selectedTags = []
 }
 </script>
 

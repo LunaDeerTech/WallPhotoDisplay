@@ -22,6 +22,9 @@
     <BrowseSettingsDialog
       v-model="dialogs.browseSettings"
     />
+    <FilterPhotosDialog
+      v-model="dialogs.filterPhotos"
+    />
     <PhotoManageDialog
       v-model="dialogs.photoManage"
     />
@@ -71,6 +74,7 @@ import PWAUpdatePrompt from './components/common/PWAUpdatePrompt.vue'
 import OfflineIndicator from './components/common/OfflineIndicator.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
+import FilterPhotosDialog from './components/dialogs/FilterPhotosDialog.vue'
 import PhotoManageDialog from './components/dialogs/PhotoManageDialog.vue'
 import ProfileDialog from './components/dialogs/ProfileDialog.vue'
 import UserManageDialog from './components/dialogs/UserManageDialog.vue'
@@ -95,6 +99,7 @@ const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
 interface DialogStates {
   login: boolean
   browseSettings: boolean
+  filterPhotos: boolean
   photoManage: boolean
   profile: boolean
   userManage: boolean
@@ -105,6 +110,7 @@ interface DialogStates {
 const dialogs = reactive<DialogStates>({
   login: false,
   browseSettings: false,
+  filterPhotos: false,
   photoManage: false,
   profile: false,
   userManage: false,
@@ -129,7 +135,7 @@ onMounted(async () => {
 })
 
 // Dialog handlers
-type DialogName = 'login' | 'browse-settings' | 'photo-manage' | 'profile' | 'user-manage'
+type DialogName = 'login' | 'browse-settings' | 'filter-photos' | 'photo-manage' | 'profile' | 'user-manage'
 
 const handleOpenDialog = (dialogName: DialogName): void => {
   switch (dialogName) {
@@ -138,6 +144,9 @@ const handleOpenDialog = (dialogName: DialogName): void => {
       break
     case 'browse-settings':
       dialogs.browseSettings = true
+      break
+    case 'filter-photos':
+      dialogs.filterPhotos = true
       break
     case 'photo-manage':
       dialogs.photoManage = true
