@@ -144,7 +144,6 @@
 <script setup lang="ts">
 import { computed, watch, reactive } from 'vue'
 import Modal from '../common/Modal.vue'
-import TagSelector from '../common/TagSelector.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useTheme } from '@/composables/useTheme'
 import type { ThemeMode, SortBy } from '@/types'
