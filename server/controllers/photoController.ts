@@ -29,6 +29,17 @@ interface BatchError {
   error: string
 }
 
+function verifyTagName(name: string): boolean {
+  // 只允许中英文、数字、下划线和减号
+  const regex = /^[\w\u4e00-\u9fa5\-]+$/
+  return regex.test(name)
+}
+
+function filterTagName(name: string): string {
+  // 移除特殊字符，只保留中英文、数字、下划线和减号
+  return name.replace(/[^\w\u4e00-\u9fa5\-]/g, '')
+}
+
 /**
  * 解析标签字符串
  * 过滤掉特殊字符，只保留中英文、数字、下划线和减号
@@ -41,7 +52,7 @@ function parseTags(tagsStr: string | undefined): string[] {
   
   for (const match of matches) {
     // 移除特殊字符，只保留中英文、数字、下划线和减号
-    const tag = match[1].trim().replace(/[^\w\u4e00-\u9fa5\-]/g, '')
+    const tag = filterTagName(match[1].trim())
     if (tag) {
       tags.add(tag)
     }
@@ -317,7 +328,17 @@ export async function updatePhotoTags(req: AuthenticatedRequest, res: Response):
       })
       return
     }
-    
+
+    for (const tag of tags) {
+      if (!verifyTagName(tag)) {
+        res.status(400).json({
+          success: false,
+          error: `Invalid tag name: ${tag}`
+        })
+        return
+      }
+    }
+
     // 检查图片是否存在
     const photo = Photo.findById(photoId)
     if (!photo) {
@@ -505,6 +526,16 @@ export async function batchUpdateTags(req: AuthenticatedRequest, res: Response):
         error: 'IDs must be a non-empty array'
       })
       return
+    }
+
+    for (const tag of tags) {
+      if (!verifyTagName(tag)) {
+        res.status(400).json({
+          success: false,
+          error: `Invalid tag name: ${tag}`
+        })
+        return
+      }
     }
     
     if (!Array.isArray(tags)) {
