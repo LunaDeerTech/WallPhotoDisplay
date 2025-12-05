@@ -1,69 +1,62 @@
-# Wall Photo Display - Dockerfile
-# 多阶段构建：构建前端 + 运行时环境
+# ============================================
+# Wall Photo Display - Production Dockerfile
+# Multi-stage build for optimized image size
+# ============================================
 
-# ============================================
-# 阶段1：构建前端资源
-# ============================================
+# Stage 1: Build frontend and backend
 FROM node:20-alpine AS builder
 
+# Install build dependencies for native modules (sharp, better-sqlite3, bcrypt)
+RUN apk add --no-cache python3 make g++ vips-dev
+
 WORKDIR /app
 
-# 复制 package 文件
+# Copy package files first for better cache
 COPY package*.json ./
 
-# 安装所有依赖（包括 devDependencies 用于构建）
+# Install all dependencies (including devDependencies for build)
 RUN npm ci
 
-# 复制源代码
+# Copy source code
 COPY . .
 
-# 构建前端
-RUN npm run build
+# Build frontend (Vue + Vite) and backend (TypeScript)
+RUN npm run build:all
 
 # ============================================
-# 阶段2：生产运行时
-# ============================================
-FROM node:20-alpine AS runtime
+# Stage 2: Production runtime
+FROM node:20-alpine AS production
 
-# 安装 better-sqlite3 编译所需的依赖
-RUN apk add --no-cache python3 make g++
+# Install runtime dependencies for native modules
+RUN apk add --no-cache vips-dev
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S photowall -u 1001
 
 WORKDIR /app
 
-# 复制 package 文件
+# Copy package files
 COPY package*.json ./
 
-# 仅安装生产依赖
-RUN npm ci --only=production && \
-    npm cache clean --force
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
 
-# 从构建阶段复制前端资源
+# Copy built artifacts from builder stage
 COPY --from=builder /app/dist ./dist
 
-# 复制服务端代码
-COPY server ./server
+# Create directories for data persistence
+RUN mkdir -p data/uploads && chown -R photowall:nodejs data
 
-# 复制公共资源
-COPY public ./public
+# Switch to non-root user
+USER photowall
 
-# 创建数据目录
-RUN mkdir -p /app/data/uploads
-
-# 设置环境变量
-ENV NODE_ENV=production \
-    PORT=3000 \
-    DB_PATH=/app/data/photowall.db \
-    UPLOAD_PATH=/app/data/uploads
-
-# 暴露端口
+# Expose port
 EXPOSE 3000
 
-# 数据卷 - 持久化数据库和上传文件
-VOLUME ["/app/data"]
+# Environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
 
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/tags || exit 1
-
-# 启动命令
-CMD ["node", "server/index.ts"]
+# Start the application (npm run start)
+CMD ["npm", "run", "start"]
