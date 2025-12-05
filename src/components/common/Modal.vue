@@ -302,20 +302,21 @@ onUnmounted(() => {
 /* Mobile responsive */
 @media (max-width: 640px) {
   .modal-overlay {
-    padding: var(--spacing-md);
+    padding: 0;
     align-items: flex-end;
   }
 
   .modal-container {
-    max-height: calc(100vh - var(--spacing-md) * 2);
+    max-height: 85vh;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .modal-sm,
   .modal-md,
   .modal-lg,
   .modal-xl {
-    max-width: none;
+    max-width: 100%;
     width: 100%;
   }
 

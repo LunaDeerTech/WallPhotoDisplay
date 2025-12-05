@@ -91,10 +91,10 @@
   /* Z-index layers */
   --z-dropdown: 100;
   --z-sticky: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 400;
-  --z-popover: 500;
-  --z-tooltip: 600;
+  --z-modal-backdrop: 1100;
+  --z-modal: 1200;
+  --z-popover: 1300;
+  --z-tooltip: 1400;
   
   /* Sidebar */
   --sidebar-width: 72px;
