@@ -35,8 +35,8 @@
     <AccountSettingsDialog
       v-model="dialogs.accountSettings"
     />
-    <UserManageDialog
-      v-model="dialogs.userManage"
+    <SystemSettingsDialog
+      v-model="dialogs.systemSettings"
     />
     <TagEditDialog
       v-model="dialogs.tagEdit"
@@ -82,7 +82,7 @@ import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
 import FilterPhotosDialog from './components/dialogs/FilterPhotosDialog.vue'
 import ProfileDialog from './components/dialogs/ProfileDialog.vue'
 import AccountSettingsDialog from './components/dialogs/AccountSettingsDialog.vue'
-import UserManageDialog from './components/dialogs/UserManageDialog.vue'
+import SystemSettingsDialog from './components/dialogs/SystemSettingsDialog.vue'
 import TagEditDialog from './components/dialogs/TagEditDialog.vue'
 import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
@@ -108,7 +108,7 @@ interface DialogStates {
   filterPhotos: boolean
   profile: boolean
   accountSettings: boolean
-  userManage: boolean
+  systemSettings: boolean
   tagEdit: boolean
   deleteConfirm: boolean
 }
@@ -120,7 +120,7 @@ const dialogs = reactive<DialogStates>({
   filterPhotos: false,
   profile: false,
   accountSettings: false,
-  userManage: false,
+  systemSettings: false,
   tagEdit: false,
   deleteConfirm: false
 })
@@ -141,7 +141,7 @@ onMounted(async () => {
   await authStore.fetchCurrentUser()
 })
 // Dialog handlers
-type DialogName = 'login' | 'filter-photos' | 'account-settings' | 'user-manage' | 'image-upload'
+type DialogName = 'login' | 'filter-photos' | 'account-settings' | 'system-settings' | 'image-upload'
 
 const handleOpenDialog = (dialogName: DialogName): void => {
   switch (dialogName) {
@@ -157,8 +157,8 @@ const handleOpenDialog = (dialogName: DialogName): void => {
     case 'account-settings':
       dialogs.accountSettings = true
       break
-    case 'user-manage':
-      dialogs.userManage = true
+    case 'system-settings':
+      dialogs.systemSettings = true
       break
   }
 }
