@@ -37,8 +37,8 @@ if (!fs.existsSync(uploadsDir)) {
 // （静态 import 会被提升到文件顶部执行，导致目录不存在时数据库连接失败）
 async function main() {
   // 导入数据库配置（这会创建数据库文件）
-  const { initTables, closeDatabase } = await import('../config/database.ts')
-  const { default: User } = await import('../models/User.ts')
+  const { initTables, closeDatabase } = await import('../config/database.js')
+  const { default: User } = await import('../models/User.js')
 
   console.log('\n开始初始化数据库...\n')
 
