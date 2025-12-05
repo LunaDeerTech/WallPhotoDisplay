@@ -91,6 +91,8 @@ npm install
 创建 `.env` 文件：
 
 ```env
+NODE_ENV=production
+
 # 服务器配置
 PORT=3000
 
@@ -116,57 +118,17 @@ npm run init-db
 
 > ⚠️ 请在首次登录后立即修改默认密码！
 
-5. **启动开发服务器**
+5. **构建前后端**
 
 ```bash
-npm run dev
+npm run build:all
 ```
 
-访问 http://localhost:5173 即可使用。
-
-### 生产部署
-
-1. **构建前后端**
-
-```bash
-npm run build
-npm run build:server
-```
-
-2. **启动生产服务器**
+6. **启动生产服务器**
 
 ```bash
 npm run start
 ```
 
 服务将在 http://localhost:3000 启动。
-
-## 🐳 Docker 部署
-
-
-### 构建镜像
-
-```bash
-docker build -t wall-photo-display .
-```
-
-### 使用 Docker Compose 启动
-
-```bash
-docker-compose up -d
-```
-
-### 手动运行容器
-
-```bash
-# 运行容器
-docker run -d \
-  -p 3000:3000 \
-  -v ./data:/app/data \
-  -e DB_PATH=/app/data/photowall.db \
-  -e UPLOAD_PATH=/app/data/uploads \
-  -e JWT_SECRET=your-secret-key \
-  -e NODE_ENV=production \
-  wall-photo-display:latest
-```
 
