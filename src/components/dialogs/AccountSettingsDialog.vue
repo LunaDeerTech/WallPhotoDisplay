@@ -393,6 +393,17 @@ function handleLogout() {
     z-index: 1;
     transition: transform 0.3s ease;
     border-right: none;
+    overflow-y: auto;
+  }
+
+  .settings-nav {
+    flex: none;
+    overflow-y: visible;
+  }
+
+  .sidebar-footer {
+    border-top: none;
+    padding-top: 0;
   }
 
   .settings-content {
