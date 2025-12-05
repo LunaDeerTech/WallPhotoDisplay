@@ -25,11 +25,11 @@
     <FilterPhotosDialog
       v-model="dialogs.filterPhotos"
     />
-    <PhotoManageDialog
-      v-model="dialogs.photoManage"
-    />
     <ProfileDialog
       v-model="dialogs.profile"
+    />
+    <AccountSettingsDialog
+      v-model="dialogs.accountSettings"
     />
     <UserManageDialog
       v-model="dialogs.userManage"
@@ -75,8 +75,8 @@ import OfflineIndicator from './components/common/OfflineIndicator.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
 import FilterPhotosDialog from './components/dialogs/FilterPhotosDialog.vue'
-import PhotoManageDialog from './components/dialogs/PhotoManageDialog.vue'
 import ProfileDialog from './components/dialogs/ProfileDialog.vue'
+import AccountSettingsDialog from './components/dialogs/AccountSettingsDialog.vue'
 import UserManageDialog from './components/dialogs/UserManageDialog.vue'
 import TagEditDialog from './components/dialogs/TagEditDialog.vue'
 import { useTheme } from '@/composables/useTheme'
@@ -100,8 +100,8 @@ interface DialogStates {
   login: boolean
   browseSettings: boolean
   filterPhotos: boolean
-  photoManage: boolean
   profile: boolean
+  accountSettings: boolean
   userManage: boolean
   tagEdit: boolean
   deleteConfirm: boolean
@@ -111,8 +111,8 @@ const dialogs = reactive<DialogStates>({
   login: false,
   browseSettings: false,
   filterPhotos: false,
-  photoManage: false,
   profile: false,
+  accountSettings: false,
   userManage: false,
   tagEdit: false,
   deleteConfirm: false
@@ -135,24 +135,18 @@ onMounted(async () => {
 })
 
 // Dialog handlers
-type DialogName = 'login' | 'browse-settings' | 'filter-photos' | 'photo-manage' | 'profile' | 'user-manage'
+type DialogName = 'login' | 'filter-photos' | 'account-settings' | 'user-manage'
 
 const handleOpenDialog = (dialogName: DialogName): void => {
   switch (dialogName) {
     case 'login':
       dialogs.login = true
       break
-    case 'browse-settings':
-      dialogs.browseSettings = true
-      break
     case 'filter-photos':
       dialogs.filterPhotos = true
       break
-    case 'photo-manage':
-      dialogs.photoManage = true
-      break
-    case 'profile':
-      dialogs.profile = true
+    case 'account-settings':
+      dialogs.accountSettings = true
       break
     case 'user-manage':
       dialogs.userManage = true

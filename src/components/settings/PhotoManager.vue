@@ -1,162 +1,154 @@
 <template>
-  <Modal
-    v-model="isOpen"
-    title="管理图片"
-    subtitle="管理您上传的图片"
-    size="xl"
-    @close="handleClose"
-  >
-    <div class="photo-manage-content">
-      <!-- Toolbar -->
-      <div class="toolbar">
-        <template v-if="!isMultiSelectMode">
-          <button
-            type="button"
-            class="toolbar-btn primary"
-            @click="showUploadDialog = true"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <span>上传图片</span>
-          </button>
-
-          <div class="toolbar-divider" />
-
-          <!-- Tag filter dropdown -->
-          <div class="filter-dropdown" ref="filterDropdownRef">
-            <button
-              type="button"
-              class="toolbar-btn"
-              :class="{ active: filterTags.length > 0 }"
-              @click="showFilterDropdown = !showFilterDropdown"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-              </svg>
-              <span>筛选{{ filterTags.length > 0 ? ` (${filterTags.length})` : '' }}</span>
-            </button>
-            <Transition name="dropdown">
-              <div v-if="showFilterDropdown" class="filter-panel">
-                <TagSelector
-                  v-model:selectedTags="filterTags"
-                  mode="all"
-                  :limit="15"
-                  :show-search="true"
-                  :show-count="true"
-                  empty-text="暂无标签"
-                />
-              </div>
-            </Transition>
-          </div>
-        </template>
-
-        <div class="toolbar-spacer" />
-
-        <!-- Multi-select toggle -->
+  <div class="photo-manage-content">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <template v-if="!isMultiSelectMode">
         <button
-          v-if="!isMultiSelectMode"
           type="button"
-          class="toolbar-btn"
-          @click="enterMultiSelectMode"
+          class="toolbar-btn primary"
+          @click="showUploadDialog = true"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 11 12 14 22 4"/>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          <span>多选</span>
+          <span>上传图片</span>
         </button>
 
-        <!-- Multi-select actions -->
-        <template v-else>
-          <span class="selected-count">已选择 {{ selectedPhotos.length }} 张</span>
+        <div class="toolbar-divider" />
+
+        <!-- Tag filter dropdown -->
+        <div class="filter-dropdown" ref="filterDropdownRef">
           <button
             type="button"
             class="toolbar-btn"
-            :disabled="selectedPhotos.length === 0"
-            @click="handleBatchEditTags"
+            :class="{ active: filterTags.length > 0 }"
+            @click="showFilterDropdown = !showFilterDropdown"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-              <line x1="7" y1="7" x2="7.01" y2="7"/>
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
-            <span>编辑标签</span>
+            <span>筛选{{ filterTags.length > 0 ? ` (${filterTags.length})` : '' }}</span>
           </button>
-          <button
-            type="button"
-            class="toolbar-btn danger"
-            :disabled="selectedPhotos.length === 0"
-            @click="handleBatchDelete"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-            <span>删除</span>
-          </button>
-          <button
-            type="button"
-            class="toolbar-btn"
-            @click="exitMultiSelectMode"
-          >
-            取消
-          </button>
-        </template>
+          <Transition name="dropdown">
+            <div v-if="showFilterDropdown" class="filter-panel">
+              <TagSelector
+                v-model:selectedTags="filterTags"
+                mode="all"
+                :limit="15"
+                :show-search="true"
+                :show-count="true"
+                empty-text="暂无标签"
+              />
+            </div>
+          </Transition>
+        </div>
+      </template>
+
+      <div class="toolbar-spacer" />
+
+      <!-- Multi-select toggle -->
+      <button
+        v-if="!isMultiSelectMode"
+        type="button"
+        class="toolbar-btn"
+        @click="enterMultiSelectMode"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span>多选</span>
+      </button>
+
+      <!-- Multi-select actions -->
+      <template v-else>
+        <span class="selected-count">已选择 {{ selectedPhotos.length }} 张</span>
+        <button
+          type="button"
+          class="toolbar-btn"
+          :disabled="selectedPhotos.length === 0"
+          @click="handleBatchEditTags"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+          <span>编辑标签</span>
+        </button>
+        <button
+          type="button"
+          class="toolbar-btn danger"
+          :disabled="selectedPhotos.length === 0"
+          @click="handleBatchDelete"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span>删除</span>
+        </button>
+        <button
+          type="button"
+          class="toolbar-btn"
+          @click="exitMultiSelectMode"
+        >
+          取消
+        </button>
+      </template>
+    </div>
+
+    <!-- Photos grid -->
+    <div class="photos-container" ref="photosContainerRef" @scroll="handleScroll">
+      <div v-if="loading && photos.length === 0" class="loading-state">
+        <svg class="spinner" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3"/>
+        </svg>
+        <span>加载中...</span>
       </div>
 
-      <!-- Photos grid -->
-      <div class="photos-container" ref="photosContainerRef" @scroll="handleScroll">
-        <div v-if="loading && photos.length === 0" class="loading-state">
-          <svg class="spinner" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3"/>
-          </svg>
-          <span>加载中...</span>
-        </div>
+      <div v-else-if="photos.length === 0" class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <p>暂无图片</p>
+        <button type="button" class="btn btn-primary" @click="showUploadDialog = true">
+          上传图片
+        </button>
+      </div>
 
-        <div v-else-if="photos.length === 0" class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          <p>暂无图片</p>
-          <button type="button" class="btn btn-primary" @click="showUploadDialog = true">
-            上传图片
-          </button>
-        </div>
-
-        <div v-else class="photos-grid">
-          <div
-            v-for="photo in photos"
-            :key="photo.id"
-            class="photo-item"
-            :class="{ selected: isPhotoSelected(photo.id) }"
-            @click="handlePhotoClick(photo)"
-            @contextmenu.prevent="handlePhotoContextMenu($event, photo)"
-          >
-            <img
-              :src="photo.thumbnailUrl || photo.url"
-              :alt="photo.originalName"
-              loading="lazy"
-            />
-            <div v-if="isMultiSelectMode" class="photo-checkbox">
-              <svg v-if="isPhotoSelected(photo.id)" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-              </svg>
-            </div>
-            <div class="photo-overlay">
-              <span class="photo-name">{{ photo.originalName }}</span>
-            </div>
+      <div v-else class="photos-grid">
+        <div
+          v-for="photo in photos"
+          :key="photo.id"
+          class="photo-item"
+          :class="{ selected: isPhotoSelected(photo.id) }"
+          @click="handlePhotoClick(photo)"
+          @contextmenu.prevent="handlePhotoContextMenu($event, photo)"
+        >
+          <img
+            :src="photo.thumbnailUrl || photo.url"
+            :alt="photo.originalName"
+            loading="lazy"
+          />
+          <div v-if="isMultiSelectMode" class="photo-checkbox">
+            <svg v-if="isPhotoSelected(photo.id)" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+          </div>
+          <div class="photo-overlay">
+            <span class="photo-name">{{ photo.originalName }}</span>
           </div>
         </div>
+      </div>
 
-        <div v-if="loading && photos.length > 0" class="loading-more">
-          <svg class="spinner" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3"/>
-          </svg>
-        </div>
+      <div v-if="loading && photos.length > 0" class="loading-more">
+        <svg class="spinner" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3"/>
+        </svg>
       </div>
     </div>
 
@@ -210,7 +202,7 @@
         </div>
       </template>
     </Modal>
-  </Modal>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -219,22 +211,10 @@ import Modal from '../common/Modal.vue'
 import TagSelector from '../common/TagSelector.vue'
 import ContextMenu from '../common/ContextMenu.vue'
 import PhotoViewer from '../photo/PhotoViewer.vue'
-import TagEditDialog from './TagEditDialog.vue'
-import ImageUploadDialog from './ImageUploadDialog.vue'
+import TagEditDialog from '../dialogs/TagEditDialog.vue'
+import ImageUploadDialog from '../dialogs/ImageUploadDialog.vue'
 import photosApi from '@/api/photos'
 import type { Photo, ContextMenuItem } from '@/types'
-
-interface Props {
-  modelValue?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  modelValue: false
-})
-
-const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-}>()
 
 interface Pagination {
   page: number
@@ -249,12 +229,6 @@ interface ContextMenuState {
   y: number
   targetPhoto: Photo | null
 }
-
-// Local state
-const isOpen = computed({
-  get: () => props.modelValue,
-  set: (value: boolean) => emit('update:modelValue', value)
-})
 
 const photos = ref<Photo[]>([])
 const loading = ref(false)
@@ -306,28 +280,16 @@ const contextMenuItems = computed((): ContextMenuItem[] => {
   return items
 })
 
-// Watch for dialog open
-watch(isOpen, async (newValue) => {
-  if (newValue) {
-    await fetchPhotos()
-  } else {
-    // Reset state when closing
-    photos.value = []
-    selectedPhotos.value = []
-    isMultiSelectMode.value = false
-    filterTags.value = []
-  }
-})
-
 // Watch for filter changes
 watch(filterTags, async () => {
   pagination.value.page = 1
   await fetchPhotos()
 }, { deep: true })
 
-// Click outside to close filter dropdown
-onMounted(() => {
+// Lifecycle
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  await fetchPhotos()
 })
 
 onUnmounted(() => {
@@ -507,19 +469,14 @@ function handleUploadSuccess(): void {
   pagination.value.page = 1
   fetchPhotos()
 }
-
-// Close handler
-function handleClose(): void {
-  isOpen.value = false
-}
 </script>
 
 <style scoped>
 .photo-manage-content {
   display: flex;
   flex-direction: column;
-  height: 75vh;
-  min-height: 500px;
+  height: 100%;
+  min-height: 400px;
 }
 
 /* Toolbar */
