@@ -26,6 +26,20 @@
         <span class="sidebar-btn-label">筛选图片</span>
       </button>
 
+      <!-- Upload Photo -->
+      <button 
+        class="sidebar-btn" 
+        @click="handleUploadClick"
+        title="上传图片"
+      >
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span class="sidebar-btn-label">上传图片</span>
+      </button>
+
       <!-- Account Info -->
       <button 
         class="sidebar-btn" 
@@ -62,7 +76,7 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
-type DialogType = 'filter-photos' | 'account-settings' | 'user-manage' | 'login'
+type DialogType = 'filter-photos' | 'account-settings' | 'user-manage' | 'login' | 'image-upload'
 
 const authStore = useAuthStore()
 
@@ -71,6 +85,14 @@ const isAdmin = computed(() => authStore.isAdmin)
 const emit = defineEmits<{
   'open-dialog': [dialog: DialogType]
 }>()
+
+const handleUploadClick = () => {
+  if (authStore.isLoggedIn) {
+    emit('open-dialog', 'image-upload')
+  } else {
+    emit('open-dialog', 'login')
+  }
+}
 </script>
 
 <style scoped>

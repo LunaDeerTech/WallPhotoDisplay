@@ -294,8 +294,8 @@ function handleLogout() {
   color: var(--color-danger);
 }
 
-.logout-btn:hover {
-  background: var(--color-bg-danger-light);
+.nav-item.logout-btn:hover {
+  background-color: var(--color-bg-danger-light);
 }
 
 .logout-icon {

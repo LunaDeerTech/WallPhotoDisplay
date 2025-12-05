@@ -19,6 +19,10 @@
       v-model="dialogs.login"
       @success="handleLoginSuccess"
     />
+    <ImageUploadDialog
+      v-model="dialogs.imageUpload"
+      @success="handleUploadSuccess"
+    />
     <BrowseSettingsDialog
       v-model="dialogs.browseSettings"
     />
@@ -73,6 +77,7 @@ import PWAInstallPrompt from './components/common/PWAInstallPrompt.vue'
 import PWAUpdatePrompt from './components/common/PWAUpdatePrompt.vue'
 import OfflineIndicator from './components/common/OfflineIndicator.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
+import ImageUploadDialog from './components/dialogs/ImageUploadDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
 import FilterPhotosDialog from './components/dialogs/FilterPhotosDialog.vue'
 import ProfileDialog from './components/dialogs/ProfileDialog.vue'
@@ -98,6 +103,7 @@ const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
 // Dialog states
 interface DialogStates {
   login: boolean
+  imageUpload: boolean
   browseSettings: boolean
   filterPhotos: boolean
   profile: boolean
@@ -109,6 +115,7 @@ interface DialogStates {
 
 const dialogs = reactive<DialogStates>({
   login: false,
+  imageUpload: false,
   browseSettings: false,
   filterPhotos: false,
   profile: false,
@@ -133,14 +140,16 @@ onMounted(async () => {
   // Try to restore user session
   await authStore.fetchCurrentUser()
 })
-
 // Dialog handlers
-type DialogName = 'login' | 'filter-photos' | 'account-settings' | 'user-manage'
+type DialogName = 'login' | 'filter-photos' | 'account-settings' | 'user-manage' | 'image-upload'
 
 const handleOpenDialog = (dialogName: DialogName): void => {
   switch (dialogName) {
     case 'login':
       dialogs.login = true
+      break
+    case 'image-upload':
+      dialogs.imageUpload = true
       break
     case 'filter-photos':
       dialogs.filterPhotos = true
@@ -157,6 +166,11 @@ const handleOpenDialog = (dialogName: DialogName): void => {
 // Login success handler
 const handleLoginSuccess = (): void => {
   // Refresh photos to show user-specific content
+  photosStore.fetchPhotos()
+}
+
+const handleUploadSuccess = (): void => {
+  // Refresh photos to show newly uploaded content
   photosStore.fetchPhotos()
 }
 

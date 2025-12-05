@@ -35,6 +35,10 @@
   --color-warning: #FF9F0A;
   --color-error: #FF453A;
   --color-info: #64D2FF;
+
+  /* Aliases & Derived colors */
+  --color-danger: var(--color-error);
+  --color-bg-danger-light: rgba(255, 69, 58, 0.15);
 }
 
 /* Custom accent color theme */

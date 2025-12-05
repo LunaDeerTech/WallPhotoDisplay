@@ -44,6 +44,10 @@
   --color-error: #FF3B30;
   --color-info: #5AC8FA;
   
+  /* Aliases & Derived colors */
+  --color-danger: var(--color-error);
+  --color-bg-danger-light: rgba(255, 59, 48, 0.1);
+  
   /* Spacing - generous for iOS feel */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
