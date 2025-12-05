@@ -31,6 +31,7 @@ interface BatchError {
 
 /**
  * 解析标签字符串
+ * 过滤掉特殊字符，只保留中英文、数字、下划线和减号
  */
 function parseTags(tagsStr: string | undefined): string[] {
   if (!tagsStr) return []
@@ -39,7 +40,8 @@ function parseTags(tagsStr: string | undefined): string[] {
   const tags = new Set<string>()
   
   for (const match of matches) {
-    const tag = match[1].trim()
+    // 移除特殊字符，只保留中英文、数字、下划线和减号
+    const tag = match[1].trim().replace(/[^\w\u4e00-\u9fa5\-]/g, '')
     if (tag) {
       tags.add(tag)
     }
