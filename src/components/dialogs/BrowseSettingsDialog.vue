@@ -252,7 +252,7 @@ function handleSave(): void {
 
 // Reset to defaults
 function resetToDefaults(): void {
-  localSettings.columns = 4
+  localSettings.columns = window.innerWidth < 768 ? 2 : 5
   localSettings.sortBy = 'created_at_desc'
   localSettings.theme = 'system'
   localSettings.customAccentColor = '#007AFF'

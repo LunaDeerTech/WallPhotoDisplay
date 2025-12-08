@@ -206,7 +206,8 @@ function updateSetting(key: keyof LocalSettings, value: any) {
 
 // Reset to defaults
 function resetToDefaults(): void {
-  updateSetting('columns', 4)
+  const defaultColumns = window.innerWidth < 768 ? 2 : 5
+  updateSetting('columns', defaultColumns)
   updateSetting('sortBy', 'created_at_desc')
   updateSetting('theme', 'system')
   updateSetting('customAccentColor', '#007AFF')

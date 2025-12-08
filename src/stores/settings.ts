@@ -20,8 +20,22 @@ interface StoredSettings {
  * Settings Store - 浏览设置状态管理
  */
 export const useSettingsStore = defineStore('settings', () => {
+  // Helper to get default columns based on screen width
+  const getDefaultColumns = (): number => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 768) {
+        return 2
+      }
+      if (window.innerWidth < 1200) {
+        return 4
+      }
+      return 5
+    }
+    return 5
+  }
+
   // State
-  const columns = ref<number>(4)                              // 瀑布流列数
+  const columns = ref<number>(getDefaultColumns())            // 瀑布流列数
   const selectedTags = ref<string[]>([])                      // 筛选标签
   const theme = ref<ThemeMode>('system')                      // 主题
   const sortBy = ref<SortBy>('created_at_desc')                        // 排序方式
@@ -149,7 +163,7 @@ export const useSettingsStore = defineStore('settings', () => {
    * 重置所有设置为默认值
    */
   function resetToDefaults(): void {
-    columns.value = 4
+    columns.value = getDefaultColumns()
     selectedTags.value = []
     theme.value = 'system'
     sortBy.value = 'created_at_desc'
