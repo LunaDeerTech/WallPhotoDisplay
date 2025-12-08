@@ -259,12 +259,14 @@ function resetToDefaults(): void {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .column-option:hover {
   background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
 }
 
 .column-option.active {
@@ -316,6 +318,7 @@ function resetToDefaults(): void {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
   font-size: 0.875rem;
@@ -323,6 +326,7 @@ function resetToDefaults(): void {
 
 .sort-option:hover {
   background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
 }
 
 .sort-option.active {
@@ -352,6 +356,7 @@ function resetToDefaults(): void {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
   font-size: 0.875rem;
@@ -359,6 +364,7 @@ function resetToDefaults(): void {
 
 .theme-option:hover {
   background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
 }
 
 .theme-option.active {

@@ -1,7 +1,7 @@
 <template>
   <Modal
     v-model="isOpen"
-    title="个人信息"
+    title="个人中心"
     size="xl"
     class="account-settings-modal"
     @close="handleClose"
@@ -200,7 +200,7 @@ function handleLogout() {
   min-height: 600px;
   max-height: 900px;
   overflow: hidden;
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
 }
 
 /* Override modal size */
@@ -212,7 +212,7 @@ function handleLogout() {
 /* Sidebar */
 .settings-sidebar {
   width: 100%;
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--color-border);
@@ -241,11 +241,11 @@ function handleLogout() {
 }
 
 .nav-item:hover {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
 }
 
 .nav-item.active {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
   color: var(--color-accent);
 }
 
@@ -309,7 +309,7 @@ function handleLogout() {
 /* Content */
 .settings-content {
   flex: 1;
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -320,7 +320,7 @@ function handleLogout() {
   align-items: center;
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
 }
 
 .back-btn {

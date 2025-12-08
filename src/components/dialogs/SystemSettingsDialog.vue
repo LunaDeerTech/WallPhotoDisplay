@@ -1,7 +1,7 @@
 <template>
   <Modal
     v-model="isOpen"
-    title="系统设置"
+    title="后台管理"
     size="xl"
     class="system-settings-modal"
     @close="handleClose"
@@ -159,7 +159,7 @@ watch(isOpen, (newValue) => {
 
 .settings-sidebar {
   width: 100%;
-  background-color: var(--color-bg-primary);
+  background-color: var(--color-bg-elevated);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -189,12 +189,12 @@ watch(isOpen, (newValue) => {
 }
 
 .nav-item:hover {
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
 .nav-item.active {
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-bg-tertiary);
   color: var(--color-accent);
   box-shadow: none;
 }
@@ -233,7 +233,7 @@ watch(isOpen, (newValue) => {
 /* Content */
 .settings-content {
   flex: 1;
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -244,7 +244,7 @@ watch(isOpen, (newValue) => {
   align-items: center;
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
 }
 
 .back-btn {
