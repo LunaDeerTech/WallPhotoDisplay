@@ -60,6 +60,7 @@
 import { ref, computed, watch, h } from 'vue'
 import Modal from '../common/Modal.vue'
 import UserManagement from '../settings/UserManagement.vue'
+import AboutSystem from '../settings/AboutSystem.vue'
 import { useAuthStore } from '@/stores/auth'
 
 // Icons
@@ -68,6 +69,12 @@ const IconUsers = h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'curren
   h('circle', { cx: '9', cy: '7', r: '4' }),
   h('path', { d: 'M23 21v-2a4 4 0 0 0-3-3.87' }),
   h('path', { d: 'M16 3.13a4 4 0 0 1 0 7.75' })
+])
+
+const IconInfo = h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }, [
+  h('circle', { cx: '12', cy: '12', r: '10' }),
+  h('line', { x1: '12', y1: '16', x2: '12', y2: '12' }),
+  h('line', { x1: '12', y1: '8', x2: '12.01', y2: '8' })
 ])
 
 interface Props {
@@ -100,6 +107,13 @@ const menuItems = [
     icon: IconUsers,
     component: UserManagement,
     requiresAdmin: true
+  },
+  {
+    id: 'about-system',
+    label: '关于系统',
+    icon: IconInfo,
+    component: AboutSystem,
+    requiresAdmin: false
   }
 ]
 
