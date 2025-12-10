@@ -132,5 +132,5 @@ export interface SystemConfig {
   siteName: string
   siteDescription: string
   menuTitle: string
-  menuIcon: string
+  menuIconUrl: string
 }

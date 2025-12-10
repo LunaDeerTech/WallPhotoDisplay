@@ -38,21 +38,23 @@
       </div>
 
       <div class="form-group">
-        <label>菜单栏图标 (SVG)</label>
-        <textarea 
-          v-model="form.menuIcon" 
-          class="form-input code-font" 
-          rows="5"
-          placeholder="<svg...>"
-        ></textarea>
-        <span class="help-text">请输入 SVG 代码</span>
+        <label>菜单栏图标 (图片URL)</label>
+        <input 
+          v-model="form.menuIconUrl" 
+          type="text"
+          class="form-input" 
+          placeholder="https://example.com/logo.png"
+        />
+        <span class="help-text">请输入图片链接，留空则仅显示标题</span>
       </div>
 
       <div class="preview-section">
         <label>预览</label>
         <div class="preview-box">
           <div class="logo-preview">
-            <div class="logo-icon-wrapper" v-html="form.menuIcon"></div>
+            <div class="logo-icon-wrapper" v-if="form.menuIconUrl">
+              <img :src="form.menuIconUrl" alt="Logo" />
+            </div>
             <span class="logo-text">{{ form.menuTitle }}</span>
           </div>
         </div>
@@ -80,7 +82,7 @@ const form = ref({
   siteName: '',
   siteDescription: '',
   menuTitle: '',
-  menuIcon: ''
+  menuIconUrl: ''
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
@@ -186,9 +188,10 @@ async function handleSubmit() {
   justify-content: center;
 }
 
-:deep(.logo-icon-wrapper svg) {
+:deep(.logo-icon-wrapper img) {
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
 .logo-text {

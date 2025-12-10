@@ -3,7 +3,9 @@
     <!-- Logo / Title -->
     <div class="sidebar-header">
       <div class="logo">
-        <div class="logo-icon-wrapper" v-html="config.menuIcon"></div>
+        <div class="logo-icon-wrapper" v-if="config.menuIconUrl">
+          <img :src="config.menuIconUrl" alt="Logo" />
+        </div>
         <span class="logo-text">{{ config.menuTitle }}</span>
       </div>
     </div>
@@ -138,9 +140,10 @@ const handleUploadClick = () => {
   color: var(--color-accent);
 }
 
-:deep(.logo-icon-wrapper svg) {
+:deep(.logo-icon-wrapper img) {
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
 .logo-text {
