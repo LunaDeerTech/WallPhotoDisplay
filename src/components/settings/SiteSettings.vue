@@ -1,8 +1,13 @@
 <template>
   <div class="site-settings">
     <h3 class="section-title">系统设置</h3>
+
+    
     
     <form @submit.prevent="handleSubmit" class="settings-form">
+
+      <h4 class="sub-section-title">网站信息</h4>
+
       <div class="form-group">
         <label>网站名称</label>
         <input 
@@ -23,6 +28,20 @@
           rows="3"
           placeholder="A multi-user photo wall application"
         ></textarea>
+      </div>
+
+      <h4 class="sub-section-title">菜单栏设置</h4>
+
+      <div class="preview-section">
+        <label>预览</label>
+        <div class="preview-box">
+          <div class="logo-preview">
+            <div class="logo-icon-wrapper" v-if="form.menuIconUrl">
+              <img :src="form.menuIconUrl" alt="Logo" />
+            </div>
+            <span class="logo-text">{{ form.menuTitle }}</span>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -48,15 +67,21 @@
         <span class="help-text">请输入图片链接，留空则仅显示标题</span>
       </div>
 
-      <div class="preview-section">
-        <label>预览</label>
-        <div class="preview-box">
-          <div class="logo-preview">
-            <div class="logo-icon-wrapper" v-if="form.menuIconUrl">
-              <img :src="form.menuIconUrl" alt="Logo" />
-            </div>
-            <span class="logo-text">{{ form.menuTitle }}</span>
+      <h4 class="sub-section-title">访问控制</h4>
+
+      <div class="form-group">
+        <div class="setting-row">
+          <div class="setting-info">
+            <label class="setting-label">强制登录</label>
+            <span class="help-text">开启后，未登录用户无法查看照片墙，必须登录才能访问</span>
           </div>
+          <label class="switch">
+            <input 
+              v-model="form.forceLogin" 
+              type="checkbox" 
+            />
+            <span class="slider"></span>
+          </label>
         </div>
       </div>
 
@@ -70,33 +95,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { storeToRefs } from 'pinia'
+import { useToast } from '@/composables/useToast'
 
 const configStore = useConfigStore()
 const { config } = storeToRefs(configStore)
+const toast = useToast()
 const loading = ref(false)
 
 const form = ref({
   siteName: '',
   siteDescription: '',
   menuTitle: '',
-  menuIconUrl: ''
+  menuIconUrl: '',
+  forceLogin: false
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
 watch(config, (newConfig) => {
-  form.value = { ...newConfig }
+  form.value = {
+    siteName: newConfig?.siteName ?? '',
+    siteDescription: newConfig?.siteDescription ?? '',
+    menuTitle: newConfig?.menuTitle ?? '',
+    menuIconUrl: newConfig?.menuIconUrl ?? '',
+    forceLogin: !!newConfig?.forceLogin
+  }
 }, { immediate: true })
 
 async function handleSubmit() {
   loading.value = true
   try {
     await configStore.updateConfig(form.value)
-    alert('设置已保存')
+    toast.success('设置已保存')
   } catch (error) {
-    alert('保存失败')
+    toast.error('保存失败')
   } finally {
     loading.value = false
   }
@@ -113,6 +147,14 @@ async function handleSubmit() {
   font-weight: 600;
   margin-bottom: var(--spacing-lg);
   color: var(--color-text-primary);
+}
+
+.sub-section-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-top: calc(var(--spacing-xl) - var(--spacing-md));
+    margin-bottom: calc(var(--spacing-md) - 36px);
+    color: var(--color-text-primary);
 }
 
 .settings-form {
@@ -140,10 +182,81 @@ async function handleSubmit() {
   color: var(--color-text-primary);
   font-size: 1rem;
 }
-
 .form-input:focus {
   outline: none;
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-transparent);
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-label {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* Switch styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-tertiary);
+  transition: .3s;
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+input:checked + .slider {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+input:focus + .slider {
   box-shadow: 0 0 0 2px var(--color-accent-transparent);
 }
 

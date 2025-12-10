@@ -4,6 +4,7 @@
     <OfflineIndicator />
     <PWAInstallPrompt />
     <PWAUpdatePrompt />
+    <Toast />
     
     <MainContent
       ref="mainContentRef"
@@ -69,13 +70,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import MainContent from './components/layout/MainContent.vue'
 import Modal from './components/common/Modal.vue'
 import PWAInstallPrompt from './components/common/PWAInstallPrompt.vue'
 import PWAUpdatePrompt from './components/common/PWAUpdatePrompt.vue'
 import OfflineIndicator from './components/common/OfflineIndicator.vue'
+import Toast from './components/common/Toast.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
 import ImageUploadDialog from './components/dialogs/ImageUploadDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
@@ -145,6 +147,18 @@ onMounted(async () => {
   // Try to restore user session
   await authStore.fetchCurrentUser()
 })
+
+// Watch for force login requirement
+watch(
+  [() => configStore.config.forceLogin, () => authStore.isLoggedIn, () => authStore.loading],
+  ([forceLogin, isLoggedIn, loading]) => {
+    if (forceLogin && !isLoggedIn && !loading) {
+      dialogs.login = true
+    }
+  },
+  { immediate: true }
+)
+
 // Dialog handlers
 type DialogName = 'login' | 'filter-photos' | 'account-settings' | 'system-settings' | 'image-upload'
 

@@ -8,7 +8,8 @@ export const useConfigStore = defineStore('config', () => {
         siteName: 'Wall Photo Display',
         siteDescription: 'A multi-user photo wall application',
         menuTitle: '照片墙',
-        menuIconUrl: ''
+        menuIconUrl: '',
+        forceLogin: false
     })
 
     const isLoading = ref(false)

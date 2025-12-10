@@ -1,45 +1,55 @@
 <template>
   <main class="main-content">
     <div class="content-body">
-      <!-- Photo Waterfall -->
-      <PhotoWaterfall
-        :photos="photosStore.photos"
-        :columns="settingsStore.columns"
-        :loading="photosStore.loading"
-        :has-more="photosStore.hasMore"
-        :selectable="multiSelect.isSelectionMode.value"
-        :selected-ids="multiSelect.selectedIds.value as number[]"
-        :show-uploader="true"
-        @load-more="handleLoadMore"
-        @photo-click="handlePhotoClick"
-        @photo-contextmenu="handlePhotoContextMenu"
-        @photo-select="handlePhotoSelect"
-        @photo-view="handlePhotoView"
-      />
+      <div v-if="authStore.loading" class="loading-placeholder"></div>
+      <div v-else-if="isLocked" class="locked-state">
+        <div class="locked-content">
+          <div class="locked-icon">🔒</div>
+          <h3>需要登录</h3>
+          <p>请登录后查看照片墙</p>
+        </div>
+      </div>
+      <template v-else>
+        <!-- Photo Waterfall -->
+        <PhotoWaterfall
+          :photos="photosStore.photos"
+          :columns="settingsStore.columns"
+          :loading="photosStore.loading"
+          :has-more="photosStore.hasMore"
+          :selectable="multiSelect.isSelectionMode.value"
+          :selected-ids="multiSelect.selectedIds.value as number[]"
+          :show-uploader="true"
+          @load-more="handleLoadMore"
+          @photo-click="handlePhotoClick"
+          @photo-contextmenu="handlePhotoContextMenu"
+          @photo-select="handlePhotoSelect"
+          @photo-view="handlePhotoView"
+        />
 
-      <!-- Photo Context Menu -->
-      <PhotoContextMenu
-        v-model:visible="contextMenu.state.visible"
-        :x="contextMenu.state.x"
-        :y="contextMenu.state.y"
-        :photo="contextMenu.state.targetData as Photo | null"
-        :selection-mode="multiSelect.isSelectionMode.value"
-        @view="handlePhotoView"
-        @download="handleDownload"
-        @edit-tags="handleEditTags"
-        @delete="handleDelete"
-        @multi-select="handleEnterMultiSelect"
-        @select="handleSelectFromMenu"
-      />
+        <!-- Photo Context Menu -->
+        <PhotoContextMenu
+          v-model:visible="contextMenu.state.visible"
+          :x="contextMenu.state.x"
+          :y="contextMenu.state.y"
+          :photo="contextMenu.state.targetData as Photo | null"
+          :selection-mode="multiSelect.isSelectionMode.value"
+          @view="handlePhotoView"
+          @download="handleDownload"
+          @edit-tags="handleEditTags"
+          @delete="handleDelete"
+          @multi-select="handleEnterMultiSelect"
+          @select="handleSelectFromMenu"
+        />
 
-      <!-- Photo Viewer -->
-      <PhotoViewer
-        v-model="viewerVisible"
-        :photos="photosStore.photos"
-        :initial-index="viewerInitialIndex"
-        @close="viewerVisible = false"
-        @change="handleViewerChange"
-      />
+        <!-- Photo Viewer -->
+        <PhotoViewer
+          v-model="viewerVisible"
+          :photos="photosStore.photos"
+          :initial-index="viewerInitialIndex"
+          @close="viewerVisible = false"
+          @change="handleViewerChange"
+        />
+      </template>
     </div>
 
     <!-- Multi-select toolbar -->
@@ -82,9 +92,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { usePhotosStore } from '@/stores/photos'
 import { useSettingsStore } from '@/stores/settings'
+import { useConfigStore } from '@/stores/config'
+import { useAuthStore } from '@/stores/auth'
 import { useMultiSelect } from '@/composables/useMultiSelect'
 import { useContextMenu } from '@/composables/useContextMenu'
 import PhotoWaterfall from '../photo/PhotoWaterfall.vue'
@@ -101,6 +113,10 @@ const emit = defineEmits<{
 
 const photosStore = usePhotosStore()
 const settingsStore = useSettingsStore()
+const configStore = useConfigStore()
+const authStore = useAuthStore()
+
+const isLocked = computed(() => configStore.config.forceLogin && !authStore.isLoggedIn)
 
 // Context menu
 const contextMenu = useContextMenu()
@@ -327,5 +343,34 @@ defineExpose({
   .toolbar-leave-to {
     transform: translateY(100%);
   }
+}
+
+.locked-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  width: 100%;
+}
+
+.locked-content {
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.locked-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.locked-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+}
+
+.loading-placeholder {
+  height: 60vh;
+  width: 100%;
 }
 </style>
