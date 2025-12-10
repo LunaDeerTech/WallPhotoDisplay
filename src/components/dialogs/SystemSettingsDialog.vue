@@ -97,7 +97,7 @@ const isOpen = computed({
   set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const activeSection = ref<string | null>('user-management')
+const activeSection = ref<string | null>(null)
 
 // Menu Items
 const menuItems = [
@@ -143,12 +143,19 @@ function handleClose() {
 // Watch for open to reset state if needed
 watch(isOpen, (newValue) => {
   if (newValue) {
-    // Select first available item if nothing selected or current selection invalid
-    if (!activeSection.value || !visibleMenuItems.value.find(i => i.id === activeSection.value)) {
-      if (visibleMenuItems.value.length > 0) {
-        activeSection.value = visibleMenuItems.value[0].id
-      } else {
-        activeSection.value = null
+    const isMobile = window.innerWidth < 768
+    
+    if (isMobile) {
+      // On mobile, always start with menu
+      activeSection.value = null
+    } else {
+      // On desktop, select first available item if nothing selected or current selection invalid
+      if (!activeSection.value || !visibleMenuItems.value.find(i => i.id === activeSection.value)) {
+        if (visibleMenuItems.value.length > 0) {
+          activeSection.value = visibleMenuItems.value[0].id
+        } else {
+          activeSection.value = null
+        }
       }
     }
   }
