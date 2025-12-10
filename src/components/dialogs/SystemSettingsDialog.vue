@@ -165,9 +165,9 @@ watch(isOpen, (newValue) => {
 <style scoped>
 .settings-container {
   display: flex;
-  height: 70vh;
-  min-height: 500px;
-  max-height: 800px;
+  height: 80vh;
+  min-height: 600px;
+  max-height: 900px;
   overflow: hidden;
   margin: calc(var(--spacing-md) * -1); /* Negate modal padding */
 }
@@ -206,18 +206,15 @@ watch(isOpen, (newValue) => {
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: left;
-  color: var(--color-text-secondary);
 }
 
 .nav-item:hover {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
 }
 
 .nav-item.active {
-  background-color: var(--color-bg-tertiary);
+  background: var(--color-bg-tertiary);
   color: var(--color-accent);
-  box-shadow: none;
 }
 
 .nav-icon {
@@ -226,6 +223,11 @@ watch(isOpen, (newValue) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--color-text-secondary);
+}
+
+.nav-item.active .nav-icon {
+  color: var(--color-accent);
 }
 
 .nav-icon svg {
@@ -237,6 +239,11 @@ watch(isOpen, (newValue) => {
   flex: 1;
   font-size: 1rem;
   font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.nav-item.active .nav-label {
+  color: var(--color-accent);
 }
 
 .nav-arrow {

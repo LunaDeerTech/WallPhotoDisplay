@@ -282,6 +282,12 @@ function handleLogout() {
   width: 16px;
   height: 16px;
   color: var(--color-text-tertiary);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.nav-item.active .nav-arrow {
+  opacity: 1;
 }
 
 .sidebar-footer {
