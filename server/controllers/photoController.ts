@@ -99,12 +99,13 @@ async function processImage(filePath: string, filename: string): Promise<ImageDi
  */
 export async function getPhotos(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { page = '1', limit = '20', tags, sort = 'created_at_desc', userId } = req.query as {
+    const { page = '1', limit = '20', tags, sort = 'created_at_desc', userId, userIds } = req.query as {
       page?: string
       limit?: string
       tags?: string
       sort?: PhotoQueryParams['sort']
       userId?: string
+      userIds?: string
     }
     
     // 解析标签参数
@@ -112,13 +113,20 @@ export async function getPhotos(req: AuthenticatedRequest, res: Response): Promi
     if (tags) {
       tagArray = tags.split(',').map(t => t.trim()).filter(t => t)
     }
+
+    // 解析用户ID列表
+    let userIdArray: number[] = []
+    if (userIds) {
+      userIdArray = userIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+    }
     
     const result = Photo.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
       tags: tagArray,
       sort,
-      userId: userId ? parseInt(userId) : undefined
+      userId: userId ? parseInt(userId) : undefined,
+      userIds: userIdArray.length > 0 ? userIdArray : undefined
     })
     
     res.json({

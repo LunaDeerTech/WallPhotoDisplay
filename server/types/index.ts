@@ -162,6 +162,7 @@ export interface PhotoQueryParams {
   tags?: string[]
   sort?: 'created_at_desc' | 'created_at_asc' | 'random'
   userId?: number
+  userIds?: number[]
 }
 
 /**

@@ -20,6 +20,7 @@ export interface PhotoFilters {
   tags: string[]
   sort: 'created_at_desc' | 'created_at_asc' | 'random'
   userId: number | null
+  userIds: number[]
 }
 
 /**
@@ -47,7 +48,8 @@ export const usePhotosStore = defineStore('photos', () => {
   const currentFilters = ref<PhotoFilters>({
     tags: [],
     sort: 'created_at_desc',
-    userId: null
+    userId: null,
+    userIds: []
   })
 
   // Getters
@@ -67,7 +69,8 @@ export const usePhotosStore = defineStore('photos', () => {
     currentFilters.value = {
       tags: filters.tags ?? [],
       sort: filters.sort ?? 'created_at_desc',
-      userId: filters.userId ?? null
+      userId: filters.userId ?? null,
+      userIds: filters.userIds ?? []
     }
     
     try {
@@ -85,6 +88,10 @@ export const usePhotosStore = defineStore('photos', () => {
       // 添加用户筛选
       if (currentFilters.value.userId) {
         params.userId = currentFilters.value.userId
+      }
+
+      if (currentFilters.value.userIds.length > 0) {
+        params.userIds = currentFilters.value.userIds.join(',')
       }
       
       const response = await photosApi.getPhotos(params)
@@ -126,6 +133,10 @@ export const usePhotosStore = defineStore('photos', () => {
       
       if (currentFilters.value.userId) {
         params.userId = currentFilters.value.userId
+      }
+
+      if (currentFilters.value.userIds.length > 0) {
+        params.userIds = currentFilters.value.userIds.join(',')
       }
       
       const response = await photosApi.getPhotos(params)
@@ -290,7 +301,8 @@ export const usePhotosStore = defineStore('photos', () => {
     currentFilters.value = {
       tags: [],
       sort: 'created_at_desc',
-      userId: null
+      userId: null,
+      userIds: []
     }
   }
 

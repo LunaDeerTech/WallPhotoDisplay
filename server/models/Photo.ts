@@ -87,7 +87,7 @@ const Photo = {
   /**
    * 获取图片列表（支持分页、筛选、排序）
    */
-  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId }: PhotoQueryParams = {}): PhotoPaginatedResult {
+  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds }: PhotoQueryParams = {}): PhotoPaginatedResult {
     let whereClause = 'WHERE 1=1'
     const params: (string | number)[] = []
 
@@ -95,6 +95,13 @@ const Photo = {
     if (userId) {
       whereClause += ' AND p.user_id = ?'
       params.push(userId)
+    }
+
+    // 多用户筛选
+    if (userIds && userIds.length > 0) {
+      const placeholders = userIds.map(() => '?').join(',')
+      whereClause += ` AND p.user_id IN (${placeholders})`
+      params.push(...userIds)
     }
 
     // 标签筛选（图片需要包含所有指定标签）

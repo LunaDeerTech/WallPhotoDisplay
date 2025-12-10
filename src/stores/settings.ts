@@ -11,6 +11,7 @@ const SETTINGS_KEY = 'photowall_settings'
 interface StoredSettings {
   columns?: number
   selectedTags?: string[]
+  selectedUsers?: number[]
   theme?: ThemeMode
   sortBy?: SortBy
   customAccentColor?: string
@@ -37,6 +38,7 @@ export const useSettingsStore = defineStore('settings', () => {
   // State
   const columns = ref<number>(getDefaultColumns())            // 瀑布流列数
   const selectedTags = ref<string[]>([])                      // 筛选标签
+  const selectedUsers = ref<number[]>([])                     // 筛选用户
   const theme = ref<ThemeMode>('system')                      // 主题
   const sortBy = ref<SortBy>('created_at_desc')                        // 排序方式
   const customAccentColor = ref<string>('#4a90d9')            // 自定义主题色
@@ -49,6 +51,7 @@ export const useSettingsStore = defineStore('settings', () => {
         const settings: StoredSettings = JSON.parse(stored)
         if (settings.columns !== undefined) columns.value = settings.columns
         if (settings.selectedTags !== undefined) selectedTags.value = settings.selectedTags
+        if (settings.selectedUsers !== undefined) selectedUsers.value = settings.selectedUsers
         if (settings.theme !== undefined) theme.value = settings.theme
         if (settings.sortBy !== undefined) sortBy.value = settings.sortBy
         if (settings.customAccentColor !== undefined) customAccentColor.value = settings.customAccentColor
@@ -64,6 +67,7 @@ export const useSettingsStore = defineStore('settings', () => {
       const settings: StoredSettings = {
         columns: columns.value,
         selectedTags: selectedTags.value,
+        selectedUsers: selectedUsers.value,
         theme: theme.value,
         sortBy: sortBy.value,
         customAccentColor: customAccentColor.value
@@ -75,7 +79,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   // Watch for changes and auto-save
-  watch([columns, selectedTags, theme, sortBy, customAccentColor], () => {
+  watch([columns, selectedTags, selectedUsers, theme, sortBy, customAccentColor], () => {
     saveToStorage()
   }, { deep: true })
 
@@ -135,6 +139,13 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   /**
+   * 设置筛选用户
+   */
+  function setSelectedUsers(users: number[]): void {
+    selectedUsers.value = users
+  }
+
+  /**
    * 设置主题
    */
   function setTheme(value: ThemeMode): void {
@@ -165,6 +176,7 @@ export const useSettingsStore = defineStore('settings', () => {
   function resetToDefaults(): void {
     columns.value = getDefaultColumns()
     selectedTags.value = []
+    selectedUsers.value = []
     theme.value = 'system'
     sortBy.value = 'created_at_desc'
     customAccentColor.value = '#4a90d9'
@@ -177,6 +189,7 @@ export const useSettingsStore = defineStore('settings', () => {
     // State
     columns,
     selectedTags,
+    selectedUsers,
     theme,
     sortBy,
     customAccentColor,
@@ -184,6 +197,7 @@ export const useSettingsStore = defineStore('settings', () => {
     // Actions
     setColumns,
     setSelectedTags,
+    setSelectedUsers,
     addSelectedTag,
     removeSelectedTag,
     toggleSelectedTag,
