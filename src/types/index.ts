@@ -126,3 +126,11 @@ export interface MultiSelectState {
   enabled: boolean
   selectedIds: Set<number>
 }
+
+// 系统配置类型
+export interface SystemConfig {
+  siteName: string
+  siteDescription: string
+  menuTitle: string
+  menuIcon: string
+}

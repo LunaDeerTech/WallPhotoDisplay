@@ -1,19 +1,17 @@
+import 'dotenv/config'
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import cors from 'cors'
 import history from 'connect-history-api-fallback'
-import dotenv from 'dotenv'
 
 // Import routes
 import authRoutes from './routes/auth.js'
 import userRoutes from './routes/users.js'
 import photoRoutes from './routes/photos.js'
 import tagRoutes from './routes/tags.js'
-
-// Load environment variables
-dotenv.config()
+import configRoutes from './routes/config.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -30,6 +28,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/photos', photoRoutes)
 app.use('/api/tags', tagRoutes)
+app.use('/api/config', configRoutes)
 
 // Static files - uploaded photos
 // In production: dist/server -> ../../data/uploads

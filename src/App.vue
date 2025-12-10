@@ -87,6 +87,7 @@ import TagEditDialog from './components/dialogs/TagEditDialog.vue'
 import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
 import { usePhotosStore } from '@/stores/photos'
+import { useConfigStore } from '@/stores/config'
 import photosApi from '@/api/photos'
 import type { Photo } from '@/types'
 
@@ -96,6 +97,7 @@ const { initTheme } = useTheme()
 // Stores
 const authStore = useAuthStore()
 const photosStore = usePhotosStore()
+const configStore = useConfigStore()
 
 // Component refs
 const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
@@ -137,6 +139,9 @@ onMounted(async () => {
   // Initialize theme
   initTheme()
   
+  // Fetch system config
+  configStore.fetchConfig()
+
   // Try to restore user session
   await authStore.fetchCurrentUser()
 })

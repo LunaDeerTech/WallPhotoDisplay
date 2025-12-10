@@ -3,12 +3,8 @@
     <!-- Logo / Title -->
     <div class="sidebar-header">
       <div class="logo">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21 15 16 10 5 21"/>
-        </svg>
-        <span class="logo-text">照片墙</span>
+        <div class="logo-icon-wrapper" v-html="config.menuIcon"></div>
+        <span class="logo-text">{{ config.menuTitle }}</span>
       </div>
     </div>
 
@@ -73,10 +69,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
+import { storeToRefs } from 'pinia'
 
 type DialogType = 'filter-photos' | 'account-settings' | 'system-settings' | 'login' | 'image-upload'
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
+const { config } = storeToRefs(configStore)
 
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -127,6 +127,20 @@ const handleUploadClick = () => {
 .logo-icon {
   width: 32px;
   height: 32px;
+}
+
+.logo-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+}
+
+:deep(.logo-icon-wrapper svg) {
+  width: 100%;
+  height: 100%;
 }
 
 .logo-text {
