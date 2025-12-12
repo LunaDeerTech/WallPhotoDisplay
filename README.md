@@ -6,7 +6,7 @@
 ![Express.js](https://img.shields.io/badge/Express.js-4.x-000000?logo=express)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)
-![License](https://img.shields.io/badge/License-MIT-blue)
+![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)
 
 ## ✨ 功能特性
 
@@ -17,13 +17,6 @@
 - 📱 **PWA 支持** - 可安装为桌面/移动应用，支持离线访问
 - 🖱️ **丰富的交互** - 右键菜单、批量操作、图片放大预览
 - 📤 **便捷上传** - 支持拖拽上传，自动生成缩略图
-
-## 📷 截图预览
-
-![](images/main-view.png)
-![](images/view-setting.png)
-![](images/tag-edit.png)
-![](images/upload-photos.png)
 
 ## 🛠️ 技术栈
 
