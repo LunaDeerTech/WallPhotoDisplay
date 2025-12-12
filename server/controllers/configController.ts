@@ -13,7 +13,7 @@ const DEFAULT_CONFIG = {
   forceLogin: false
 }
 
-export const getConfig = async (req: Request, res: Response) => {
+export const getConfig = async (_: Request, res: Response) => {
   try {
     let config = DEFAULT_CONFIG
     try {
