@@ -267,17 +267,6 @@ const Photo = {
   },
 
   /**
-   * 更新图片状态
-   */
-  updateStatus(id: number, status: 'pending' | 'approved' | 'rejected'): PhotoWithTags | null {
-    const stmt = db.prepare('UPDATE photos SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-    const result = stmt.run(status, id)
-    
-    if (result.changes === 0) return null
-    return this.findById(id)
-  },
-
-  /**
    * 批量更新图片状态
    */
   batchUpdateStatus(ids: number[], status: 'pending' | 'approved' | 'rejected'): number {
