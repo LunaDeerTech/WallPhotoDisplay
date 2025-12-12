@@ -139,6 +139,15 @@
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
           </div>
+          
+          <!-- Status Badges -->
+          <div v-if="photo.status === 'pending'" class="photo-status-badge pending">
+            <span>待审核</span>
+          </div>
+          <div v-else-if="photo.status === 'rejected'" class="photo-status-badge rejected">
+            <span>已拒绝</span>
+          </div>
+
           <div class="photo-overlay">
             <span class="photo-name">{{ photo.originalName }}</span>
           </div>
@@ -715,6 +724,27 @@ function handleUploadSuccess(): void {
   width: 24px;
   height: 24px;
   color: var(--color-text-secondary);
+}
+
+.photo-status-badge {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: white;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+.photo-status-badge.pending {
+  background-color: rgba(255, 193, 7, 0.8); /* Warning/Yellow */
+}
+
+.photo-status-badge.rejected {
+  background-color: rgba(244, 67, 54, 0.8); /* Error/Red */
 }
 
 /* Confirm dialog */

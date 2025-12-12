@@ -50,6 +50,7 @@ export function initTables(): void {
       mime_type VARCHAR(100),
       width INTEGER,
       height INTEGER,
+      status VARCHAR(20) DEFAULT 'approved',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

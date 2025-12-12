@@ -37,6 +37,7 @@ export interface Photo {
   // Dimension fields (may be computed)
   width?: number
   height?: number
+  status: 'pending' | 'approved' | 'rejected'
 }
 
 export interface PhotoUploadPayload {

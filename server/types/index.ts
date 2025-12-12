@@ -30,6 +30,7 @@ export interface PhotoEntity {
   mime_type: string | null
   width: number | null
   height: number | null
+  status: 'pending' | 'approved' | 'rejected'
   created_at: string
   updated_at: string
 }
@@ -151,6 +152,7 @@ export interface PhotoCreateInput {
   mimeType?: string
   width?: number
   height?: number
+  status?: 'pending' | 'approved' | 'rejected'
 }
 
 /**
@@ -163,6 +165,7 @@ export interface PhotoQueryParams {
   sort?: 'created_at_desc' | 'created_at_asc' | 'random'
   userId?: number
   userIds?: number[]
+  status?: 'pending' | 'approved' | 'rejected'
 }
 
 /**

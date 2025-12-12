@@ -47,13 +47,13 @@ const Photo = {
   /**
    * 创建新图片记录
    */
-  create({ userId, filename, originalName, filePath, fileSize, mimeType, width, height }: PhotoCreateInput): PhotoWithTags | null {
+  create({ userId, filename, originalName, filePath, fileSize, mimeType, width, height, status = 'approved' }: PhotoCreateInput): PhotoWithTags | null {
     const stmt = db.prepare(`
-      INSERT INTO photos (user_id, filename, original_name, file_path, file_size, mime_type, width, height)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO photos (user_id, filename, original_name, file_path, file_size, mime_type, width, height, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     
-    const result = stmt.run(userId, filename, originalName, filePath, fileSize, mimeType, width, height)
+    const result = stmt.run(userId, filename, originalName, filePath, fileSize, mimeType, width, height, status)
     
     return this.findById(result.lastInsertRowid as number)
   },
@@ -66,18 +66,18 @@ const Photo = {
       SELECT 
         p.id, p.user_id as userId, p.filename, p.original_name as originalName,
         p.file_path as filePath, p.file_size as fileSize, p.mime_type as mimeType,
-        p.width, p.height, p.created_at as createdAt, p.updated_at as updatedAt,
+        p.width, p.height, p.status, p.created_at as createdAt, p.updated_at as updatedAt,
         u.display_name as uploaderName
       FROM photos p
       LEFT JOIN users u ON p.user_id = u.id
       WHERE p.id = ?
     `)
     
-    const photo = stmt.get(id) as PhotoRow | undefined
+    const photo = stmt.get(id) as (PhotoRow & { status: 'pending' | 'approved' | 'rejected' }) | undefined
     if (!photo) return null
     
     // 获取图片标签
-    const photoWithTags: PhotoWithTags = {
+    const photoWithTags: PhotoWithTags & { status: 'pending' | 'approved' | 'rejected' } = {
       ...photo,
       tags: this.getTags(id)
     }
@@ -87,9 +87,15 @@ const Photo = {
   /**
    * 获取图片列表（支持分页、筛选、排序）
    */
-  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds }: PhotoQueryParams = {}): PhotoPaginatedResult {
+  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds, status }: PhotoQueryParams = {}): PhotoPaginatedResult {
     let whereClause = 'WHERE 1=1'
     const params: (string | number)[] = []
+
+    // 状态筛选
+    if (status) {
+      whereClause += ' AND p.status = ?'
+      params.push(status)
+    }
 
     // 用户筛选
     if (userId) {
@@ -146,7 +152,7 @@ const Photo = {
       SELECT DISTINCT
         p.id, p.user_id as userId, p.filename, p.original_name as originalName,
         p.file_path as filePath, p.file_size as fileSize, p.mime_type as mimeType,
-        p.width, p.height, p.created_at as createdAt, p.updated_at as updatedAt,
+        p.width, p.height, p.status, p.created_at as createdAt, p.updated_at as updatedAt,
         u.display_name as uploaderName
       FROM photos p
       LEFT JOIN users u ON p.user_id = u.id
@@ -195,6 +201,16 @@ const Photo = {
       WHERE pt.photo_id = ?
     `)
     return stmt.all(photoId) as TagRow[]
+  },
+
+  /**
+   * 更新图片状态
+   */
+  updateStatus(id: number, status: 'pending' | 'approved' | 'rejected'): PhotoWithTags | null {
+    const stmt = db.prepare('UPDATE photos SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    const result = stmt.run(status, id)
+    if (result.changes === 0) return null
+    return this.findById(id)
   },
 
   /**
@@ -248,6 +264,30 @@ const Photo = {
 
     transaction()
     return photoIds.length
+  },
+
+  /**
+   * 更新图片状态
+   */
+  updateStatus(id: number, status: 'pending' | 'approved' | 'rejected'): PhotoWithTags | null {
+    const stmt = db.prepare('UPDATE photos SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    const result = stmt.run(status, id)
+    
+    if (result.changes === 0) return null
+    return this.findById(id)
+  },
+
+  /**
+   * 批量更新图片状态
+   */
+  batchUpdateStatus(ids: number[], status: 'pending' | 'approved' | 'rejected'): number {
+    if (ids.length === 0) return 0
+    
+    const placeholders = ids.map(() => '?').join(',')
+    const stmt = db.prepare(`UPDATE photos SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN (${placeholders})`)
+    
+    const result = stmt.run(status, ...ids)
+    return result.changes
   },
 
   /**

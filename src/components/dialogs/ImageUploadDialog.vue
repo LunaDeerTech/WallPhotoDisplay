@@ -163,6 +163,7 @@ import TagInput from '../common/TagInput.vue'
 import photosApi from '@/api/photos'
 import tagsApi, { type TagWithCount } from '@/api/tags'
 import type { Photo } from '@/types'
+import { useToast } from '@/composables/useToast'
 
 interface Props {
   modelValue?: boolean
@@ -176,6 +177,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'success': [photos: Photo[]]
 }>()
+
+const toast = useToast()
 
 // Constants
 const MAX_FILES = 20
@@ -365,6 +368,13 @@ async function handleUpload(): Promise<void> {
       
       // Save photos before setTimeout to preserve type narrowing
       const uploadedPhotos = response.data.photos
+      
+      const hasPending = uploadedPhotos.some(p => p.status === 'pending')
+      if (hasPending) {
+        toast.info('上传成功，部分图片需要审核后显示')
+      } else {
+        toast.success('上传成功')
+      }
       
       // Emit success and close
       setTimeout(() => {

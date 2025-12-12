@@ -8,12 +8,36 @@ import {
   updatePhotoTags,
   deletePhoto,
   batchDeletePhotos,
-  batchUpdateTags
+  batchUpdateTags,
+  getPendingPhotos,
+  reviewPhoto,
+  batchReviewPhotos
 } from '../controllers/photoController.js'
-import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.js'
+import { authMiddleware, optionalAuthMiddleware, adminMiddleware } from '../middleware/auth.js'
 import { uploadMultiple, handleUploadError } from '../middleware/upload.js'
 
 const router = Router()
+
+/**
+ * @route GET /api/photos/pending
+ * @desc 获取待审核图片列表
+ * @access Admin
+ */
+router.get('/pending', authMiddleware, adminMiddleware, getPendingPhotos)
+
+/**
+ * @route POST /api/photos/batch/review
+ * @desc 批量审核图片
+ * @access Admin
+ */
+router.post('/batch/review', authMiddleware, adminMiddleware, batchReviewPhotos)
+
+/**
+ * @route POST /api/photos/:id/review
+ * @desc 审核图片
+ * @access Admin
+ */
+router.post('/:id/review', authMiddleware, adminMiddleware, reviewPhoto)
 
 /**
  * @route GET /api/photos

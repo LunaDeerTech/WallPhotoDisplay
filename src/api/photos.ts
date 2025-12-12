@@ -12,6 +12,7 @@ export interface PhotoQueryParams {
   sort?: 'created_at_desc' | 'created_at_asc' | 'random'
   userId?: number
   userIds?: string
+  status?: 'pending' | 'approved' | 'rejected'
 }
 
 /**
@@ -147,6 +148,27 @@ const photosApi = {
    */
   batchUpdateTags(ids: number[], tags: string[]): Promise<ApiResponse<BatchUpdateTagsResponse>> {
     return request.put('/photos/batch/tags', { ids, tags })
+  },
+
+  /**
+   * 获取待审核图片
+   */
+  getPendingPhotos(params?: PhotoQueryParams): Promise<ApiResponse<PhotoListResponse>> {
+    return request.get('/photos/pending', { params })
+  },
+
+  /**
+   * 审核图片
+   */
+  reviewPhoto(id: number, action: 'approve' | 'reject'): Promise<ApiResponse<Photo>> {
+    return request.post(`/photos/${id}/review`, { action })
+  },
+
+  /**
+   * 批量审核图片
+   */
+  batchReviewPhotos(ids: number[], action: 'approve' | 'reject'): Promise<ApiResponse<{ count: number }>> {
+    return request.post('/batch/review', { ids, action })
   }
 }
 

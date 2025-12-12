@@ -14,26 +14,31 @@ const DEFAULT_CONFIG = {
   uploadReview: false
 }
 
-export const getConfig = async (_: Request, res: Response) => {
+export const loadConfig = async () => {
   try {
-    let config = DEFAULT_CONFIG
-    try {
-      const data = await fs.readFile(CONFIG_PATH, 'utf-8')
-      // Strip BOM if present
-      const jsonContent = data.replace(/^\uFEFF/, '')
-      config = { ...DEFAULT_CONFIG, ...JSON.parse(jsonContent) }
-    } catch (error: any) {
-      console.error('Error reading config file:', error)
-      // If file doesn't exist, use default and create file
-      if (error.code === 'ENOENT') {
-        console.log('Config file not found, creating default...')
+    const data = await fs.readFile(CONFIG_PATH, 'utf-8')
+    // Strip BOM if present
+    const jsonContent = data.replace(/^\uFEFF/, '')
+    return { ...DEFAULT_CONFIG, ...JSON.parse(jsonContent) }
+  } catch (error: any) {
+    // If file doesn't exist, use default and create file
+    if (error.code === 'ENOENT') {
+      try {
         await fs.mkdir(path.dirname(CONFIG_PATH), { recursive: true })
         await fs.writeFile(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG, null, 2))
-      } else {
-        // For other errors (e.g. JSON parse), log and return default
-        console.warn('Using default config due to read error')
+      } catch (e) {
+        console.error('Error creating default config:', e)
       }
+      return DEFAULT_CONFIG
     }
+    console.warn('Using default config due to read error:', error)
+    return DEFAULT_CONFIG
+  }
+}
+
+export const getConfig = async (_: Request, res: Response) => {
+  try {
+    const config = await loadConfig()
     res.json({ success: true, data: config })
   } catch (error) {
     console.error('Fatal error in getConfig:', error)
