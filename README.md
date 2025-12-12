@@ -64,7 +64,7 @@ wall-photo-display/
 └── data/                # SQLite 数据库文件
 ```
 
-## 🚀 快速开始
+## 🚀 手动部署
 
 ### 环境要求
 
@@ -104,19 +104,10 @@ DB_PATH=./data/photowall.db
 
 # 上传文件路径
 UPLOAD_PATH=./data/uploads
+
+# 配置文件路径
+CONFIG_PATH=./data/config.json
 ```
-
-4. **初始化数据库**
-
-```bash
-npm run init-db
-```
-
-这将创建数据库表并生成默认管理员账户：
-- 用户名：`admin`
-- 密码：`admin123`
-
-> ⚠️ 请在首次登录后立即修改默认密码！
 
 5. **构建前后端**
 
@@ -131,6 +122,12 @@ npm run start
 ```
 
 服务将在 http://localhost:3000 启动。
+
+默认管理员账户：
+- 用户名：`admin`
+- 密码：`admin123`
+
+> ⚠️ 请在首次登录后立即修改默认密码！
 
 ## 📄 开发计划
 
