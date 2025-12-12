@@ -10,7 +10,8 @@ const DEFAULT_CONFIG = {
   siteDescription: 'A multi-user photo wall application',
   menuTitle: '照片墙',
   menuIconUrl: '',
-  forceLogin: false
+  forceLogin: false,
+  uploadReview: false
 }
 
 export const getConfig = async (_: Request, res: Response) => {

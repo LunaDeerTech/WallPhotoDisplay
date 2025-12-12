@@ -85,6 +85,22 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <div class="setting-row">
+          <div class="setting-info">
+            <label class="setting-label">上传审核</label>
+            <span class="help-text">开启后，普通用户上传的照片需要管理员审核通过后才能显示</span>
+          </div>
+          <label class="switch">
+            <input 
+              v-model="form.uploadReview" 
+              type="checkbox" 
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           {{ loading ? '保存中...' : '保存设置' }}
@@ -110,7 +126,8 @@ const form = ref({
   siteDescription: '',
   menuTitle: '',
   menuIconUrl: '',
-  forceLogin: false
+  forceLogin: false,
+  uploadReview: false
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
@@ -120,7 +137,8 @@ watch(config, (newConfig) => {
     siteDescription: newConfig?.siteDescription ?? '',
     menuTitle: newConfig?.menuTitle ?? '',
     menuIconUrl: newConfig?.menuIconUrl ?? '',
-    forceLogin: !!newConfig?.forceLogin
+    forceLogin: !!newConfig?.forceLogin,
+    uploadReview: !!newConfig?.uploadReview
   }
 }, { immediate: true })
 

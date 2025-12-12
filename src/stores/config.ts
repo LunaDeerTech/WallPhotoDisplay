@@ -9,7 +9,8 @@ export const useConfigStore = defineStore('config', () => {
         siteDescription: 'A multi-user photo wall application',
         menuTitle: '照片墙',
         menuIconUrl: '',
-        forceLogin: false
+        forceLogin: false,
+        uploadReview: false
     })
 
     const isLoading = ref(false)
