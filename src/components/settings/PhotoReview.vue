@@ -56,6 +56,7 @@
         class="review-card"
         :class="{ 'is-selected': isSelected(photo.id) }"
         @click="handleCardClick(photo)"
+        @contextmenu.prevent="handlePhotoContextMenu($event, photo)"
       >
         <div class="review-image-wrapper">
           <img :src="photo.thumbnailUrl || photo.url" :alt="photo.originalName" loading="lazy" />
@@ -118,16 +119,42 @@
         {{ loadingMore ? '加载中...' : '加载更多' }}
       </button>
     </div>
+
+    <!-- Context Menu -->
+    <ContextMenu
+      v-model:visible="contextMenu.visible"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :items="menuItems"
+      @select="handleContextMenuSelect"
+    />
+
+    <!-- Photo Viewer -->
+    <PhotoViewer
+      v-if="showViewer && viewingPhoto"
+      :photo="viewingPhoto"
+      @close="showViewer = false"
+    />
+
+    <!-- Tag Edit Dialog -->
+    <TagEditDialog
+      v-model="showTagEdit"
+      :photos="tagEditPhotos"
+      @updated="handleTagsUpdated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import photosApi from '@/api/photos'
-import type { Photo } from '@/types'
+import type { Photo, ContextMenuItem } from '@/types'
 import { useToast } from '@/composables/useToast'
 import { formatDateTime } from '@/utils/helpers'
 import { useMultiSelect } from '@/composables/useMultiSelect'
+import ContextMenu from '@/components/common/ContextMenu.vue'
+import PhotoViewer from '@/components/photo/PhotoViewer.vue'
+import TagEditDialog from '@/components/dialogs/TagEditDialog.vue'
 
 const photos = ref<Photo[]>([])
 const loading = ref(true)
@@ -138,6 +165,22 @@ const page = ref(1)
 const hasMore = ref(false)
 const toast = useToast()
 
+// Context Menu State
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  targetPhoto: null as Photo | null
+})
+
+// Viewer State
+const viewingPhoto = ref<Photo | null>(null)
+const showViewer = ref(false)
+
+// Tag Edit State
+const showTagEdit = ref(false)
+const tagEditPhotos = ref<Photo[]>([])
+
 const {
   isSelectionMode,
   selectedIds,
@@ -147,6 +190,15 @@ const {
   enterSelectionMode,
   exitSelectionMode
 } = useMultiSelect<Photo>()
+
+const menuItems = computed<ContextMenuItem[]>(() => [
+  { id: 'view', label: '放大查看', icon: 'zoom-in' },
+  { id: 'edit-tags', label: '编辑标签', icon: 'tag' },
+  { id: 'multi-select', label: '多选', icon: 'check-square' },
+  { id: 'divider', label: '', icon: '', divider: true }, // Ensure type compatibility
+  { id: 'approve', label: '通过审核', icon: 'check', danger: false },
+  { id: 'reject', label: '拒绝通过', icon: 'x', danger: true }
+])
 
 async function fetchPhotos(isLoadMore = false) {
   if (isLoadMore) {
@@ -181,7 +233,58 @@ function loadMore() {
 function handleCardClick(photo: Photo) {
   if (isSelectionMode.value) {
     toggleSelect(photo)
+  } else {
+    // Optional: Click to view if not in selection mode
+    // viewingPhoto.value = photo
+    // showViewer.value = true
   }
+}
+
+function handlePhotoContextMenu(event: MouseEvent, photo: Photo) {
+  contextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    targetPhoto: photo
+  }
+}
+
+function handleContextMenuSelect(item: ContextMenuItem) {
+  const photo = contextMenu.value.targetPhoto
+  contextMenu.value.visible = false
+  
+  if (!photo) return
+  
+  switch (item.id) {
+    case 'view':
+      viewingPhoto.value = photo
+      showViewer.value = true
+      break
+    case 'edit-tags':
+      tagEditPhotos.value = [photo]
+      showTagEdit.value = true
+      break
+    case 'multi-select':
+      enterSelectionMode()
+      toggleSelect(photo)
+      break
+    case 'approve':
+      handleReview(photo, 'approve')
+      break
+    case 'reject':
+      handleReview(photo, 'reject')
+      break
+  }
+}
+
+function handleTagsUpdated() {
+  // Refresh current list to show new tags
+  // Or just update the specific photo in the list if we want to be more efficient
+  // For simplicity, let's just reload the current page or update the local object
+  // Since we have the photo object, we can update it directly if the dialog returns the updated photo
+  // But TagEditDialog usually handles the API call.
+  // Let's just re-fetch for now to be safe and simple
+  fetchPhotos()
 }
 
 async function handleReview(photo: Photo, action: 'approve' | 'reject') {
