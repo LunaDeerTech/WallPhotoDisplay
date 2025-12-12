@@ -10,7 +10,8 @@ export const useConfigStore = defineStore('config', () => {
         menuTitle: '照片墙',
         menuIconUrl: '',
         forceLogin: false,
-        uploadReview: false
+        uploadReview: false,
+        allowRegistration: false
     })
 
     const isLoading = ref(false)

@@ -101,6 +101,22 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <div class="setting-row">
+          <div class="setting-info">
+            <label class="setting-label">开放注册</label>
+            <span class="help-text">开启后，允许新用户注册账号</span>
+          </div>
+          <label class="switch">
+            <input 
+              v-model="form.allowRegistration" 
+              type="checkbox" 
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           {{ loading ? '保存中...' : '保存设置' }}
@@ -127,7 +143,8 @@ const form = ref({
   menuTitle: '',
   menuIconUrl: '',
   forceLogin: false,
-  uploadReview: false
+  uploadReview: false,
+  allowRegistration: false
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
@@ -138,7 +155,8 @@ watch(config, (newConfig) => {
     menuTitle: newConfig?.menuTitle ?? '',
     menuIconUrl: newConfig?.menuIconUrl ?? '',
     forceLogin: !!newConfig?.forceLogin,
-    uploadReview: !!newConfig?.uploadReview
+    uploadReview: !!newConfig?.uploadReview,
+    allowRegistration: !!newConfig?.allowRegistration
   }
 }, { immediate: true })
 

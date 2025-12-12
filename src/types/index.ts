@@ -136,4 +136,5 @@ export interface SystemConfig {
   menuIconUrl: string
   forceLogin?: boolean
   uploadReview?: boolean
+  allowRegistration?: boolean
 }

@@ -11,7 +11,8 @@ const DEFAULT_CONFIG = {
   menuTitle: '照片墙',
   menuIconUrl: '',
   forceLogin: false,
-  uploadReview: false
+  uploadReview: false,
+  allowRegistration: false
 }
 
 export const loadConfig = async () => {
