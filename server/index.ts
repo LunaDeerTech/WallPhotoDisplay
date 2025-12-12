@@ -1,4 +1,9 @@
 import 'dotenv/config'
+import { ensureDirectories } from './utils/bootstrap.js'
+
+// Ensure directories exist before anything else
+ensureDirectories()
+
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
 import path from 'path'
@@ -12,9 +17,13 @@ import userRoutes from './routes/users.js'
 import photoRoutes from './routes/photos.js'
 import tagRoutes from './routes/tags.js'
 import configRoutes from './routes/config.js'
+import { runMigrations } from './utils/migrator.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Run database migrations on startup
+runMigrations()
 
 const app = express()
 
