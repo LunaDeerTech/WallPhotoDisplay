@@ -12,7 +12,13 @@ const DEFAULT_CONFIG = {
   menuIconUrl: '',
   forceLogin: false,
   uploadReview: false,
-  allowRegistration: false
+  allowRegistration: false,
+  smtpHost: '',
+  smtpPort: 465,
+  smtpUser: '',
+  smtpPass: '',
+  smtpFrom: '',
+  smtpSecure: true
 }
 
 export const loadConfig = async () => {

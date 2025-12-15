@@ -117,6 +117,74 @@
         </div>
       </div>
 
+      <h4 class="sub-section-title">邮件服务设置 (SMTP)</h4>
+
+      <div class="form-group">
+        <label>SMTP 服务器地址</label>
+        <input 
+          v-model="form.smtpHost" 
+          type="text" 
+          class="form-input" 
+          placeholder="smtp.example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>SMTP 端口</label>
+        <input 
+          v-model.number="form.smtpPort" 
+          type="number" 
+          class="form-input" 
+          placeholder="465"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>SMTP 用户名</label>
+        <input 
+          v-model="form.smtpUser" 
+          type="text" 
+          class="form-input" 
+          placeholder="user@example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>SMTP 密码</label>
+        <input 
+          v-model="form.smtpPass" 
+          type="password" 
+          class="form-input" 
+          placeholder="********"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>发件人邮箱</label>
+        <input 
+          v-model="form.smtpFrom" 
+          type="email" 
+          class="form-input" 
+          placeholder="noreply@example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <div class="setting-row">
+          <div class="setting-info">
+            <label class="setting-label">使用安全连接 (SSL/TLS)</label>
+            <span class="help-text">通常端口 465 需要开启，587 不需要</span>
+          </div>
+          <label class="switch">
+            <input 
+              v-model="form.smtpSecure" 
+              type="checkbox" 
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           {{ loading ? '保存中...' : '保存设置' }}
@@ -144,7 +212,13 @@ const form = ref({
   menuIconUrl: '',
   forceLogin: false,
   uploadReview: false,
-  allowRegistration: false
+  allowRegistration: false,
+  smtpHost: '',
+  smtpPort: 465,
+  smtpUser: '',
+  smtpPass: '',
+  smtpFrom: '',
+  smtpSecure: true
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
@@ -156,7 +230,13 @@ watch(config, (newConfig) => {
     menuIconUrl: newConfig?.menuIconUrl ?? '',
     forceLogin: !!newConfig?.forceLogin,
     uploadReview: !!newConfig?.uploadReview,
-    allowRegistration: !!newConfig?.allowRegistration
+    allowRegistration: !!newConfig?.allowRegistration,
+    smtpHost: newConfig?.smtpHost ?? '',
+    smtpPort: newConfig?.smtpPort ?? 465,
+    smtpUser: newConfig?.smtpUser ?? '',
+    smtpPass: newConfig?.smtpPass ?? '',
+    smtpFrom: newConfig?.smtpFrom ?? '',
+    smtpSecure: newConfig?.smtpSecure ?? true
   }
 }, { immediate: true })
 

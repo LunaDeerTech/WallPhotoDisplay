@@ -137,4 +137,11 @@ export interface SystemConfig {
   forceLogin?: boolean
   uploadReview?: boolean
   allowRegistration?: boolean
+  // SMTP Settings
+  smtpHost?: string
+  smtpPort?: number
+  smtpUser?: string
+  smtpPass?: string
+  smtpFrom?: string
+  smtpSecure?: boolean
 }
