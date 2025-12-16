@@ -185,6 +185,17 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          @click="handleTestEmail" 
+          :disabled="testingEmail"
+        >
+          {{ testingEmail ? '发送中...' : '发送测试邮件' }}
+        </button>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           {{ loading ? '保存中...' : '保存设置' }}
@@ -204,6 +215,7 @@ const configStore = useConfigStore()
 const { config } = storeToRefs(configStore)
 const toast = useToast()
 const loading = ref(false)
+const testingEmail = ref(false)
 
 const form = ref({
   siteName: '',
@@ -239,6 +251,17 @@ watch(config, (newConfig) => {
     smtpSecure: newConfig?.smtpSecure ?? true
   }
 }, { immediate: true })
+
+async function handleTestEmail() {
+  testingEmail.value = true
+  try {
+    // TODO: Implement test email logic
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Mock delay
+    toast.info('测试邮件功能尚未实现')
+  } finally {
+    testingEmail.value = false
+  }
+}
 
 async function handleSubmit() {
   loading.value = true
@@ -450,6 +473,16 @@ input:focus + .slider {
 
 .btn-primary:hover {
   opacity: 0.9;
+}
+
+.btn-secondary {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-elevated);
 }
 
 .btn:disabled {
