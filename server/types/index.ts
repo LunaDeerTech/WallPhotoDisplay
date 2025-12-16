@@ -12,6 +12,8 @@ export interface UserEntity {
   username: string
   password: string
   display_name: string
+  email?: string
+  email_verified: number // SQLite stores boolean as 0/1
   role: 'admin' | 'user'
   created_at: string
   updated_at: string
@@ -63,6 +65,8 @@ export interface UserPublic {
   id: number
   username: string
   displayName: string
+  email?: string
+  emailVerified: boolean
   role: 'admin' | 'user'
   createdAt: string
   updatedAt: string
@@ -117,6 +121,7 @@ export interface UserCreateInput {
   username: string
   password: string
   displayName?: string
+  email?: string
   role?: 'admin' | 'user'
 }
 
@@ -125,6 +130,7 @@ export interface UserCreateInput {
  */
 export interface UserUpdateInput {
   displayName?: string
+  email?: string
   role?: 'admin' | 'user'
 }
 

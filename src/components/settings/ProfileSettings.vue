@@ -10,175 +10,209 @@
       </div>
       <div class="user-details">
         <span class="username">{{ authStore.user?.username }}</span>
-        <span class="role-badge" :class="authStore.user?.role">
-          {{ authStore.user?.role === 'admin' ? '管理员' : '普通用户' }}
-        </span>
+        <div class="badges">
+          <span class="role-badge" :class="authStore.user?.role">
+            {{ authStore.user?.role === 'admin' ? '管理员' : '普通用户' }}
+          </span>
+          <span class="role-badge email-badge" :class="{ verified: authStore.user?.emailVerified }">
+            {{ authStore.user?.email ? (authStore.user?.emailVerified ? '邮箱已验证' : '邮箱未验证') : '未绑定邮箱' }}
+          </span>
+        </div>
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ active: activeTab === 'info' }"
-        @click="activeTab = 'info'"
-      >
-        修改信息
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        :class="{ active: activeTab === 'password' }"
-        @click="activeTab = 'password'"
-      >
-        修改密码
-      </button>
+    <div class="settings-container">
+      <!-- Section: Info -->
+      <section class="settings-section">
+        <h4 class="sub-section-title">修改信息</h4>
+        <form class="form" @submit.prevent="handleUpdateInfo">
+          <div class="form-group">
+            <label for="display-name" class="form-label">显示名称</label>
+            <div class="input-with-button">
+              <input
+                id="display-name"
+                v-model="infoForm.displayName"
+                type="text"
+                class="form-input"
+                placeholder="请输入显示名称"
+                :disabled="loading"
+              />
+              <button
+                type="submit"
+                class="btn btn-primary"
+                :disabled="loading || !isInfoFormValid"
+              >
+                {{ loading ? '保存中...' : '保存' }}
+              </button>
+            </div>
+            <p class="form-hint">这个名称将显示在您上传的图片上</p>
+          </div>
+
+          <Transition name="fade">
+            <div v-if="infoError" class="form-error">
+              {{ infoError }}
+            </div>
+          </Transition>
+
+          <Transition name="fade">
+            <div v-if="infoSuccess" class="form-success">
+              信息更新成功！
+            </div>
+          </Transition>
+        </form>
+      </section>
+
+      <!-- Section: Email -->
+      <section class="settings-section">
+        <h4 class="sub-section-title">修改邮箱</h4>
+        <div class="form">
+          <div class="form-group">
+            <label class="form-label">当前邮箱</label>
+            <div class="current-email-row">
+              <div class="current-email">
+                {{ authStore.user?.email || '未绑定' }}
+                <span v-if="authStore.user?.email" class="status-text" :class="{ verified: authStore.user?.emailVerified }">
+                  ({{ authStore.user?.emailVerified ? '已验证' : '未验证' }})
+                </span>
+              </div>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="showEmailDialog = true"
+              >
+                {{ authStore.user?.email ? '更换邮箱' : '绑定邮箱' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Password -->
+      <section class="settings-section">
+        <h4 class="sub-section-title">修改密码</h4>
+        <form class="form" @submit.prevent="handleUpdatePassword">
+          <div class="form-group">
+            <label for="old-password" class="form-label">当前密码</label>
+            <div class="password-input-wrapper">
+              <input
+                id="old-password"
+                v-model="passwordForm.oldPassword"
+                :type="showOldPassword ? 'text' : 'password'"
+                class="form-input"
+                placeholder="请输入当前密码"
+                autocomplete="current-password"
+                :disabled="loading"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="showOldPassword = !showOldPassword"
+              >
+                <svg v-if="showOldPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="new-password" class="form-label">新密码</label>
+            <div class="password-input-wrapper">
+              <input
+                id="new-password"
+                v-model="passwordForm.newPassword"
+                :type="showNewPassword ? 'text' : 'password'"
+                class="form-input"
+                placeholder="请输入新密码"
+                autocomplete="new-password"
+                :disabled="loading"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="showNewPassword = !showNewPassword"
+              >
+                <svg v-if="showNewPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <p class="form-hint">密码长度至少 6 位</p>
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-password" class="form-label">确认新密码</label>
+            <input
+              id="confirm-password"
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              class="form-input"
+              placeholder="请再次输入新密码"
+              autocomplete="new-password"
+              :disabled="loading"
+            />
+          </div>
+
+          <Transition name="fade">
+            <div v-if="passwordError" class="form-error">
+              {{ passwordError }}
+            </div>
+          </Transition>
+
+          <Transition name="fade">
+            <div v-if="passwordSuccess" class="form-success">
+              密码修改成功！
+            </div>
+          </Transition>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="loading || !isPasswordFormValid"
+            >
+              {{ loading ? '保存中...' : '修改密码' }}
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
-
-    <!-- Tab content: Info -->
-    <form v-if="activeTab === 'info'" class="form" @submit.prevent="handleUpdateInfo">
-      <div class="form-group">
-        <label for="display-name" class="form-label">显示名称</label>
-        <input
-          id="display-name"
-          v-model="infoForm.displayName"
-          type="text"
-          class="form-input"
-          placeholder="请输入显示名称"
-          :disabled="loading"
-        />
-        <p class="form-hint">这个名称将显示在您上传的图片上</p>
-      </div>
-
-      <Transition name="fade">
-        <div v-if="infoError" class="form-error">
-          {{ infoError }}
-        </div>
-      </Transition>
-
-      <Transition name="fade">
-        <div v-if="infoSuccess" class="form-success">
-          信息更新成功！
-        </div>
-      </Transition>
-
-      <button
-        type="submit"
-        class="btn btn-primary btn-block"
-        :disabled="loading || !isInfoFormValid"
-      >
-        {{ loading ? '保存中...' : '保存修改' }}
-      </button>
-    </form>
-
-    <!-- Tab content: Password -->
-    <form v-else class="form" @submit.prevent="handleUpdatePassword">
-      <div class="form-group">
-        <label for="old-password" class="form-label">当前密码</label>
-        <div class="password-input-wrapper">
-          <input
-            id="old-password"
-            v-model="passwordForm.oldPassword"
-            :type="showOldPassword ? 'text' : 'password'"
-            class="form-input"
-            placeholder="请输入当前密码"
-            autocomplete="current-password"
-            :disabled="loading"
-          />
-          <button
-            type="button"
-            class="password-toggle"
-            @click="showOldPassword = !showOldPassword"
-          >
-            <svg v-if="showOldPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-              <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="new-password" class="form-label">新密码</label>
-        <div class="password-input-wrapper">
-          <input
-            id="new-password"
-            v-model="passwordForm.newPassword"
-            :type="showNewPassword ? 'text' : 'password'"
-            class="form-input"
-            placeholder="请输入新密码"
-            autocomplete="new-password"
-            :disabled="loading"
-          />
-          <button
-            type="button"
-            class="password-toggle"
-            @click="showNewPassword = !showNewPassword"
-          >
-            <svg v-if="showNewPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-              <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
-        <p class="form-hint">密码长度至少 6 位</p>
-      </div>
-
-      <div class="form-group">
-        <label for="confirm-password" class="form-label">确认新密码</label>
-        <input
-          id="confirm-password"
-          v-model="passwordForm.confirmPassword"
-          type="password"
-          class="form-input"
-          placeholder="请再次输入新密码"
-          autocomplete="new-password"
-          :disabled="loading"
-        />
-      </div>
-
-      <Transition name="fade">
-        <div v-if="passwordError" class="form-error">
-          {{ passwordError }}
-        </div>
-      </Transition>
-
-      <Transition name="fade">
-        <div v-if="passwordSuccess" class="form-success">
-          密码修改成功！
-        </div>
-      </Transition>
-
-      <button
-        type="submit"
-        class="btn btn-primary btn-block"
-        :disabled="loading || !isPasswordFormValid"
-      >
-        {{ loading ? '保存中...' : '修改密码' }}
-      </button>
-    </form>
   </div>
+
+
+  <EmailVerificationDialog
+    v-model="showEmailDialog"
+    :title="authStore.user?.email ? '更换邮箱' : '绑定邮箱'"
+    :subtitle="authStore.user?.email ? '验证新邮箱以更换绑定' : '验证邮箱以完成绑定'"
+    :cancellable="true"
+    @success="handleEmailSuccess"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import usersApi from '@/api/users'
+import EmailVerificationDialog from '@/components/dialogs/EmailVerificationDialog.vue'
 
 const authStore = useAuthStore()
 
-// Tabs
-type Tab = 'info' | 'password'
-const activeTab = ref<Tab>('info')
+// Email Dialog
+const showEmailDialog = ref(false)
+
+function handleEmailSuccess() {
+  // Refresh user info is handled inside dialog, but we can do extra things here if needed
+}
 
 // Info form
 const infoForm = reactive({
@@ -301,20 +335,12 @@ async function handleUpdatePassword() {
   border-radius: 50%;
   background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.avatar svg {
-  width: 32px;
-  height: 32px;
-}
-
-.user-details {
+.badges {
   display: flex;
-  flex-direction: column;
   gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
 .username {
@@ -331,7 +357,6 @@ async function handleUpdatePassword() {
   font-weight: 500;
   background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
-  align-self: flex-start;
 }
 
 .role-badge.admin {
@@ -339,31 +364,36 @@ async function handleUpdatePassword() {
   color: var(--color-accent);
 }
 
-/* Tabs */
-.tabs {
-  display: flex;
-  padding: 4px;
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-}
-
-.tab-btn {
-  flex: 1;
-  padding: var(--spacing-sm);
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 500;
+.role-badge.email-badge {
+  background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
 }
 
-.tab-btn.active {
-  background: var(--color-bg-primary);
+.role-badge.email-badge.verified {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* Settings Layout */
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.sub-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
   color: var(--color-text-primary);
-  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border);
 }
 
 /* Form */
@@ -408,6 +438,41 @@ async function handleUpdatePassword() {
 .form-hint {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
+}
+
+.input-with-button {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.input-with-button .form-input {
+  flex: 1;
+}
+
+.current-email-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.current-email {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.status-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.status-text.verified {
+  color: var(--color-success);
 }
 
 .password-input-wrapper {
@@ -459,20 +524,24 @@ async function handleUpdatePassword() {
   font-size: 0.875rem;
 }
 
-.btn-block {
-  width: 100%;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
   margin-top: var(--spacing-sm);
 }
 
-.btn-primary {
-  background: var(--color-accent);
-  color: white;
+.btn {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-md);
   border: none;
   font-weight: 500;
   cursor: pointer;
-  transition: filter var(--transition-fast);
+  transition: all var(--transition-fast);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
 }
 
 .btn-primary:hover {
@@ -482,6 +551,16 @@ async function handleUpdatePassword() {
 .btn-primary:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-elevated);
 }
 
 /* Transitions */

@@ -23,6 +23,41 @@ const migrations: Migration[] = [
         db.exec("ALTER TABLE photos ADD COLUMN status VARCHAR(20) DEFAULT 'approved'")
       }
     }
+  },
+  {
+    name: '002_add_email_to_users',
+    up: () => {
+      // 1. Add email and email_verified columns to users table
+      const userColumns = db.pragma('table_info(users)') as Array<{ name: string }>
+      
+      if (!userColumns.some(col => col.name === 'email')) {
+        console.log('Adding email column to users table...')
+        // SQLite does not support adding UNIQUE columns via ALTER TABLE
+        db.exec("ALTER TABLE users ADD COLUMN email VARCHAR(255)")
+        db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+      }
+      
+      if (!userColumns.some(col => col.name === 'email_verified')) {
+        console.log('Adding email_verified column to users table...')
+        db.exec("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0")
+      }
+
+      // 2. Create email_verifications table
+      console.log('Creating email_verifications table...')
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS email_verifications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email VARCHAR(255) NOT NULL,
+          code VARCHAR(6) NOT NULL,
+          ip_address VARCHAR(45),
+          expires_at DATETIME NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+      
+      // Add index for faster lookups
+      db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email)')
+    }
   }
 ]
 

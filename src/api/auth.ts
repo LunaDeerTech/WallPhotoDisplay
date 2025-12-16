@@ -26,6 +26,20 @@ const authApi = {
    */
   getCurrentUser(): Promise<ApiResponse<User>> {
     return request.get('/auth/me')
+  },
+
+  /**
+   * 发送邮箱验证码
+   */
+  sendVerificationCode(email: string): Promise<ApiResponse<void>> {
+    return request.post('/auth/send-verification-code', { email })
+  },
+
+  /**
+   * 验证邮箱
+   */
+  verifyEmail(email: string, code: string): Promise<ApiResponse<void>> {
+    return request.post('/auth/verify-email', { email, code })
   }
 }
 

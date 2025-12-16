@@ -1,6 +1,8 @@
 import type { Response } from 'express'
-import { User } from '../models/index.js'
+import { User, Verification } from '../models/index.js'
 import { generateToken } from '../middleware/auth.js'
+import { sendEmail } from '../utils/email.js'
+import { loadConfig } from './configController.js'
 import bcrypt from 'bcrypt'
 import type { AuthenticatedRequest, LoginRequestBody } from '../types/index.js'
 
@@ -59,6 +61,8 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
           id: user.id,
           username: user.username,
           displayName: user.displayName,
+          email: user.email,
+          emailVerified: user.emailVerified,
           role: user.role
         }
       }
@@ -122,8 +126,105 @@ export async function getCurrentUser(req: AuthenticatedRequest, res: Response): 
   }
 }
 
+/**
+ * 发送邮箱验证码
+ * POST /api/auth/send-verification-code
+ */
+export async function sendVerificationCode(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { email } = req.body
+    const userId = req.user?.id
+
+    if (!email) {
+      res.status(400).json({ success: false, error: 'Email is required' })
+      return
+    }
+
+    // Check if email is already used by another user
+    if (User.existsByEmail(email, userId)) {
+      res.status(400).json({ success: false, error: 'Email is already in use' })
+      return
+    }
+
+    // Rate limiting
+    const ip = (req.ip || req.socket.remoteAddress || null) as string | null
+    if (!Verification.checkRateLimit(email, ip)) {
+      res.status(429).json({ success: false, error: 'Too many requests. Please wait.' })
+      return
+    }
+
+    // Generate code
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+
+    // Save code
+    Verification.create(email, code, ip)
+
+    // Send email
+    const config = await loadConfig()
+    if (!config.smtpHost) {
+      res.status(500).json({ success: false, error: 'SMTP configuration missing' })
+      return
+    }
+
+    await sendEmail({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      user: config.smtpUser,
+      pass: config.smtpPass,
+      from: config.smtpFrom,
+      secure: config.smtpSecure
+    }, email, 'Email Verification Code', `Your verification code is: <b>${code}</b>. It expires in 10 minutes.`)
+
+    res.json({ success: true, message: 'Verification code sent' })
+  } catch (error) {
+    console.error('Send verification code error:', error)
+    res.status(500).json({ success: false, error: 'Failed to send verification code' })
+  }
+}
+
+/**
+ * 验证邮箱
+ * POST /api/auth/verify-email
+ */
+export async function verifyEmail(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { email, code } = req.body
+    const userId = req.user?.id
+
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Not authenticated' })
+      return
+    }
+
+    if (!email || !code) {
+      res.status(400).json({ success: false, error: 'Email and code are required' })
+      return
+    }
+
+    const verification = Verification.findValid(email, code)
+    if (!verification) {
+      res.status(400).json({ success: false, error: 'Invalid or expired verification code' })
+      return
+    }
+
+    // Update user
+    User.verifyEmail(userId, email)
+
+    // Clean up
+    Verification.deleteByEmail(email)
+
+    res.json({ success: true, message: 'Email verified successfully' })
+  } catch (error) {
+    console.error('Verify email error:', error)
+    res.status(500).json({ success: false, error: 'Failed to verify email' })
+  }
+}
+
 export default {
   login,
   logout,
-  getCurrentUser
+  getCurrentUser,
+  sendVerificationCode,
+  verifyEmail
+
 }

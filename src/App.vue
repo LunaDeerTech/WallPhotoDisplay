@@ -20,6 +20,10 @@
       v-model="dialogs.login"
       @success="handleLoginSuccess"
     />
+    <EmailVerificationDialog 
+      v-model="showForcedVerification"
+      :cancellable="false"
+    />
     <ImageUploadDialog
       v-model="dialogs.imageUpload"
       @success="handleUploadSuccess"
@@ -78,6 +82,7 @@ import PWAInstallPrompt from './components/common/PWAInstallPrompt.vue'
 import PWAUpdatePrompt from './components/common/PWAUpdatePrompt.vue'
 import OfflineIndicator from './components/common/OfflineIndicator.vue'
 import Toast from './components/common/Toast.vue'
+import EmailVerificationDialog from '@/components/dialogs/EmailVerificationDialog.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
 import ImageUploadDialog from './components/dialogs/ImageUploadDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
@@ -100,6 +105,17 @@ const { initTheme } = useTheme()
 const authStore = useAuthStore()
 const photosStore = usePhotosStore()
 const configStore = useConfigStore()
+
+// Forced Email Verification Logic
+const showForcedVerification = ref(false)
+
+watch(() => authStore.user, (user) => {
+  if (user && (!user.email || !user.emailVerified)) {
+    showForcedVerification.value = true
+  } else {
+    showForcedVerification.value = false
+  }
+}, { immediate: true })
 
 // Component refs
 const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)

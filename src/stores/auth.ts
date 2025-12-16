@@ -112,6 +112,45 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * 更新当前用户的邮箱状态
+   */
+  function updateUserEmail(email: string, verified: boolean): void {
+    if (user.value) {
+      user.value = { ...user.value, email, emailVerified: verified }
+    }
+  }
+
+  /**
+   * 发送邮箱验证码
+   */
+  async function sendVerificationCode(email: string): Promise<boolean> {
+    try {
+      const response = await authApi.sendVerificationCode(email)
+      return response.success
+    } catch (error) {
+      console.error('Send verification code error:', error)
+      return false
+    }
+  }
+
+  /**
+   * 验证邮箱
+   */
+  async function verifyEmail(email: string, code: string): Promise<boolean> {
+    try {
+      const response = await authApi.verifyEmail(email, code)
+      if (response.success) {
+        updateUserEmail(email, true)
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Verify email error:', error)
+      return false
+    }
+  }
+
+  /**
    * 初始化认证状态
    * 应用启动时调用
    */
@@ -145,6 +184,9 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     fetchCurrentUser,
     updateUserDisplayName,
+    updateUserEmail,
+    sendVerificationCode,
+    verifyEmail,
     init
   }
 })

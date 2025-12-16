@@ -10,6 +10,8 @@ interface UserRow {
   username: string
   password?: string
   displayName: string
+  email?: string
+  emailVerified: number // SQLite returns 0/1
   role: 'admin' | 'user'
   createdAt: string
   updatedAt: string
@@ -30,15 +32,15 @@ const User = {
   /**
    * 创建新用户
    */
-  create({ username, password, displayName, role = 'user' }: UserCreateInput): UserPublic | null {
+  create({ username, password, displayName, email, role = 'user' }: UserCreateInput): UserPublic | null {
     const hashedPassword = bcrypt.hashSync(password, SALT_ROUNDS)
     
     const stmt = db.prepare(`
-      INSERT INTO users (username, password, display_name, role)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO users (username, password, display_name, email, role)
+      VALUES (?, ?, ?, ?, ?)
     `)
     
-    const result = stmt.run(username, hashedPassword, displayName || username, role)
+    const result = stmt.run(username, hashedPassword, displayName || username, email || null, role)
     
     return this.findById(result.lastInsertRowid as number)
   },
@@ -48,10 +50,15 @@ const User = {
    */
   findById(id: number): UserPublic | null {
     const stmt = db.prepare(`
-      SELECT id, username, display_name as displayName, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
       FROM users WHERE id = ?
     `)
-    return (stmt.get(id) as UserRow | undefined) || null
+    const row = stmt.get(id) as UserRow | undefined
+    if (!row) return null
+    return {
+      ...row,
+      emailVerified: Boolean(row.emailVerified)
+    }
   },
 
   /**
@@ -59,10 +66,15 @@ const User = {
    */
   findByUsername(username: string): UserWithPassword | null {
     const stmt = db.prepare(`
-      SELECT id, username, password, display_name as displayName, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, password, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
       FROM users WHERE username = ?
     `)
-    return (stmt.get(username) as UserRowWithPassword | undefined) || null
+    const row = stmt.get(username) as UserRowWithPassword | undefined
+    if (!row) return null
+    return {
+      ...row,
+      emailVerified: Boolean(row.emailVerified)
+    }
   },
 
   /**
@@ -70,22 +82,33 @@ const User = {
    */
   findAll(): UserPublic[] {
     const stmt = db.prepare(`
-      SELECT id, username, display_name as displayName, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
       FROM users ORDER BY created_at DESC
     `)
-    return stmt.all() as UserRow[]
+    const rows = stmt.all() as UserRow[]
+    return rows.map(row => ({
+      ...row,
+      emailVerified: Boolean(row.emailVerified)
+    }))
   },
 
   /**
    * 更新用户信息
    */
-  update(id: number, { displayName, role }: UserUpdateInput): UserPublic | null {
+  update(id: number, { displayName, email, role }: UserUpdateInput): UserPublic | null {
     const updates: string[] = []
     const values: (string | number)[] = []
 
     if (displayName !== undefined) {
       updates.push('display_name = ?')
       values.push(displayName)
+    }
+
+    if (email !== undefined) {
+      updates.push('email = ?')
+      values.push(email)
+      // Reset verification if email changes
+      updates.push('email_verified = 0')
     }
 
     if (role !== undefined) {
@@ -107,6 +130,36 @@ const User = {
     stmt.run(...values)
     return this.findById(id)
   },
+
+  /**
+   * 验证邮箱
+   */
+  verifyEmail(id: number, email: string): boolean {
+    const stmt = db.prepare(`
+      UPDATE users 
+      SET email = ?, email_verified = 1, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `)
+    const result = stmt.run(email, id)
+    return result.changes > 0
+  },
+
+  /**
+   * 检查邮箱是否已被使用
+   */
+  existsByEmail(email: string, excludeUserId?: number): boolean {
+    let sql = 'SELECT 1 FROM users WHERE email = ?'
+    const params: (string | number)[] = [email]
+    
+    if (excludeUserId) {
+      sql += ' AND id != ?'
+      params.push(excludeUserId)
+    }
+    
+    const stmt = db.prepare(sql)
+    return !!stmt.get(...params)
+  },
+
 
   /**
    * 更新用户密码
