@@ -35,11 +35,13 @@ const migrations: Migration[] = [
         // SQLite does not support adding UNIQUE columns via ALTER TABLE
         db.exec("ALTER TABLE users ADD COLUMN email VARCHAR(255)")
         db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+        db.exec("UPDATE users SET email = 'admin@email.com' WHERE username = 'admin' AND email IS NULL")
       }
       
       if (!userColumns.some(col => col.name === 'email_verified')) {
         console.log('Adding email_verified column to users table...')
         db.exec("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0")
+        db.exec("UPDATE users SET email_verified = 1 WHERE username = 'admin'")
       }
 
       // 2. Create email_verifications table
