@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import type { Request, Response } from 'express'
+import { sendEmail } from '../utils/email.js'
 
 const CONFIG_PATH = process.env.CONFIG_PATH || path.resolve(process.cwd(), 'data/config.json')
 console.log('Config path resolved to:', CONFIG_PATH)
@@ -76,5 +77,31 @@ export const updateConfig = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error updating config:', error)
     res.status(500).json({ success: false, error: 'Failed to update configuration' })
+  }
+}
+
+export const sendTestEmail = async (req: Request, res: Response) => {
+  try {
+    const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpSecure, testEmailRecipient } = req.body
+
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom) {
+      return res.status(400).json({ success: false, error: 'Missing SMTP configuration fields' })
+    }
+
+    const recipient = testEmailRecipient || smtpFrom
+
+    await sendEmail({
+      host: smtpHost,
+      port: Number(smtpPort),
+      user: smtpUser,
+      pass: smtpPass,
+      from: smtpFrom,
+      secure: Boolean(smtpSecure)
+    }, recipient, 'Test Email from Wall Photo Display', '<p>This is a test email to verify your SMTP settings.</p>')
+
+    res.json({ success: true, message: `Test email sent successfully to ${recipient}` })
+  } catch (error: any) {
+    console.error('Error sending test email:', error)
+    res.status(500).json({ success: false, error: error.message || 'Failed to send test email' })
   }
 }

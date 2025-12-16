@@ -186,14 +186,24 @@
       </div>
 
       <div class="form-group">
-        <button 
-          type="button" 
-          class="btn btn-secondary" 
-          @click="handleTestEmail" 
-          :disabled="testingEmail"
-        >
-          {{ testingEmail ? '发送中...' : '发送测试邮件' }}
-        </button>
+        <label>测试邮件接收邮箱</label>
+        <div class="test-email-row">
+          <input 
+            v-model="testEmailRecipient" 
+            type="email" 
+            class="form-input" 
+            placeholder="test@example.com"
+          />
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            @click="handleTestEmail" 
+            :disabled="testingEmail"
+          >
+            {{ testingEmail ? '发送中...' : '发送测试邮件' }}
+          </button>
+        </div>
+        <span class="help-text">如果不填写，将发送到发件人邮箱</span>
       </div>
 
       <div class="form-actions">
@@ -210,12 +220,14 @@ import { ref, watch } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { storeToRefs } from 'pinia'
 import { useToast } from '@/composables/useToast'
+import request from '@/utils/request'
 
 const configStore = useConfigStore()
 const { config } = storeToRefs(configStore)
 const toast = useToast()
 const loading = ref(false)
 const testingEmail = ref(false)
+const testEmailRecipient = ref('')
 
 const form = ref({
   siteName: '',
@@ -255,9 +267,13 @@ watch(config, (newConfig) => {
 async function handleTestEmail() {
   testingEmail.value = true
   try {
-    // TODO: Implement test email logic
-    await new Promise(resolve => setTimeout(resolve, 1000)) // Mock delay
-    toast.info('测试邮件功能尚未实现')
+    await request.post('/config/test-email', {
+      ...form.value,
+      testEmailRecipient: testEmailRecipient.value
+    })
+    toast.success('测试邮件已发送，请查收')
+  } catch (error: any) {
+    toast.error(error.response?.data?.error || '发送测试邮件失败')
   } finally {
     testingEmail.value = false
   }
@@ -488,5 +504,14 @@ input:focus + .slider {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.test-email-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.test-email-row .form-input {
+  flex: 1;
 }
 </style>
