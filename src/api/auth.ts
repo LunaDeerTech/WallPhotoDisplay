@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { ApiResponse, LoginResponse, User } from '@/types'
+import type { ApiResponse, LoginResponse, User, UserCreatePayload } from '@/types'
 
 /**
  * Auth API - 认证相关接口
@@ -12,6 +12,14 @@ const authApi = {
    */
   login(username: string, password: string): Promise<ApiResponse<LoginResponse>> {
     return request.post('/auth/login', { username, password })
+  },
+
+  /**
+   * 用户注册
+   * @param payload - 注册信息
+   */
+  register(payload: UserCreatePayload): Promise<ApiResponse<LoginResponse>> {
+    return request.post('/auth/register', payload)
   },
 
   /**

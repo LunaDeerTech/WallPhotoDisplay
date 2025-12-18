@@ -7,6 +7,9 @@
           <div class="locked-icon">🔒</div>
           <h3>需要登录</h3>
           <p>请登录后查看照片墙</p>
+          <button class="login-btn" @click="showLoginDialog">
+            登录
+          </button>
         </div>
       </div>
       <template v-else>
@@ -109,6 +112,7 @@ const emit = defineEmits<{
   'batch-edit-tags': [photos: Photo[]]
   'delete': [photo: Photo]
   'batch-delete': [photos: Photo[]]
+  'login': []
 }>()
 
 const photosStore = usePhotosStore()
@@ -226,6 +230,11 @@ function handleBatchEditTags(): void {
 function handleBatchDelete(): void {
   const selectedPhotos = multiSelect.getSelectedItems()
   emit('batch-delete', selectedPhotos)
+}
+
+// Show login dialog
+function showLoginDialog(): void {
+  emit('login')
 }
 
 // Expose methods for parent component
@@ -367,6 +376,28 @@ defineExpose({
   font-size: 1.5rem;
   margin-bottom: var(--spacing-sm);
   color: var(--color-text-primary);
+}
+
+.login-btn {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.login-btn:hover {
+  background-color: var(--color-accent-hover);
+  box-shadow: var(--shadow-hover);
+}
+
+.login-btn:active {
+  background-color: var(--color-accent-active);
 }
 
 .loading-placeholder {

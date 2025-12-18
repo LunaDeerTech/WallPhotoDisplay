@@ -31,6 +31,18 @@
         >
           {{ loading ? '发送中...' : '发送验证码' }}
         </button>
+        
+        <!-- 退出登录按钮 - 仅在不允许关闭时显示 -->
+        <button 
+          v-if="!cancellable"
+          type="button"
+          class="btn btn-danger btn-block"
+          @click="handleLogout"
+          :disabled="loading"
+          style="margin-top: var(--spacing-sm);"
+        >
+          退出登录
+        </button>
       </div>
 
       <!-- Step 2: Input Code -->
@@ -39,16 +51,16 @@
         
         <div class="code-inputs" :class="{ 'shake': shake }">
           <input
-            v-for="(digit, index) in 6"
-            :key="index"
+            v-for="i in 6"
+            :key="i"
             ref="codeInputs"
-            v-model="code[index]"
+            v-model="code[i-1]"
             type="text"
             maxlength="1"
             class="code-input"
             :class="{ 'success': isSuccess, 'error': isError }"
-            @input="handleInput(index, $event)"
-            @keydown.delete="handleDelete(index, $event)"
+            @input="handleInput(i-1, $event)"
+            @keydown.delete="handleDelete(i-1, $event)"
             @paste="handlePaste"
           />
         </div>
@@ -81,7 +93,7 @@ const props = withDefaults(defineProps<{
   cancellable?: boolean
 }>(), {
   title: '邮箱验证',
-  subtitle: '为了您的账户安全，请验证您的邮箱',
+  subtitle: '请绑定您的邮箱后继续使用',
   cancellable: false
 })
 
@@ -92,6 +104,11 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore()
 const toast = useToast()
+
+const handleLogout = () => {
+  authStore.logout()
+  emit('update:modelValue', false)
+}
 
 const step = ref(1)
 const email = ref('')
@@ -113,6 +130,8 @@ watch(() => props.modelValue, (newVal) => {
     isSuccess.value = false
     isError.value = false
     error.value = ''
+    // Clear the inputs array when dialog opens
+    codeInputs.value = []
     // Pre-fill email if available and empty
     if (!email.value && authStore.user?.email) {
       email.value = authStore.user.email
@@ -163,28 +182,44 @@ function startTimer() {
 
 function handleInput(index: number, event: Event) {
   const input = event.target as HTMLInputElement
-  const value = input.value
+  const rawValue = input.value
+  const cleanValue = rawValue.replace(/\D/g, '').slice(-1) // 只保留最后一位数字
   
-  // Ensure only numbers
-  if (!/^\d*$/.test(value)) {
-    code.value[index] = ''
-    return
+  // 强制更新输入框的值
+  if (input.value !== cleanValue) {
+    input.value = cleanValue
   }
-
-  if (value) {
-    // Move to next input
-    if (index < 5) {
-      codeInputs.value[index + 1]?.focus()
-    } else {
-      // Last digit entered, verify
-      verify()
-    }
+  
+  // 更新code数组
+  code.value[index] = cleanValue
+  
+  // 延迟一点移动焦点，确保v-model更新完成
+  if (cleanValue && index < 5) {
+    setTimeout(() => {
+      const nextInput = codeInputs.value[index + 1]
+      if (nextInput) {
+        nextInput.focus()
+        nextInput.select()
+      }
+    }, 10)
+  } else if (cleanValue && index === 5) {
+    // 最后一个数字输入完成，自动验证
+    setTimeout(() => verify(), 10)
   }
 }
 
 function handleDelete(index: number, event: KeyboardEvent) {
   if (!code.value[index] && index > 0) {
-    codeInputs.value[index - 1]?.focus()
+    event.preventDefault()
+    // 清空前一个输入框并聚焦
+    setTimeout(() => {
+      const prevInput = codeInputs.value[index - 1]
+      if (prevInput) {
+        prevInput.value = ''
+        code.value[index - 1] = ''
+        prevInput.focus()
+      }
+    }, 10)
   }
 }
 
@@ -193,17 +228,25 @@ function handlePaste(event: ClipboardEvent) {
   const pastedData = event.clipboardData?.getData('text')
   if (!pastedData) return
 
-  const numbers = pastedData.replace(/\D/g, '').split('').slice(0, 6)
+  const numbers = pastedData.replace(/\D/g, '').slice(0, 6)
   
-  numbers.forEach((num, i) => {
-    code.value[i] = num
+  // 填充输入框
+  numbers.split('').forEach((num, i) => {
+    if (codeInputs.value[i]) {
+      codeInputs.value[i].value = num
+      code.value[i] = num
+    }
   })
   
-  if (numbers.length === 6) {
-    verify()
-  } else if (numbers.length > 0) {
-    codeInputs.value[Math.min(numbers.length, 5)]?.focus()
-  }
+  // 移动焦点并验证
+  setTimeout(() => {
+    if (numbers.length === 6) {
+      verify()
+    } else if (numbers.length > 0) {
+      const nextIndex = Math.min(numbers.length, 5)
+      codeInputs.value[nextIndex]?.focus()
+    }
+  }, 10)
 }
 
 async function verify() {
@@ -273,6 +316,15 @@ onUnmounted(() => {
 .btn-block {
   width: 100%;
   padding: 0.75rem;
+}
+
+.btn-danger {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--color-error-hover);
 }
 
 .info-text {

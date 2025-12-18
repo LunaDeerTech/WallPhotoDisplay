@@ -4,7 +4,116 @@ import { generateToken } from '../middleware/auth.js'
 import { sendEmail } from '../utils/email.js'
 import { loadConfig } from './configController.js'
 import bcrypt from 'bcrypt'
-import type { AuthenticatedRequest, LoginRequestBody } from '../types/index.js'
+import type { AuthenticatedRequest, LoginRequestBody, RegisterRequestBody } from '../types/index.js'
+
+/**
+ * 用户注册
+ * POST /api/auth/register
+ */
+export async function register(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { username, password, displayName } = req.body as RegisterRequestBody
+    
+    // 验证参数
+    if (!username || !password) {
+      res.status(400).json({
+        success: false,
+        error: 'Username and password are required'
+      })
+      return
+    }
+    
+    // 验证用户名格式
+    if (username.length < 4 || username.length > 20) {
+      res.status(400).json({
+        success: false,
+        error: 'Username must be between 4 and 20 characters'
+      })
+      return
+    }
+    
+    if (!/^[\w]+$/.test(username)) {
+      res.status(400).json({
+        success: false,
+        error: 'Username can only contain letters, numbers, and underscores'
+      })
+      return
+    }
+    
+    // 验证密码长度
+    if (password.length < 6) {
+      res.status(400).json({
+        success: false,
+        error: 'Password must be at least 6 characters'
+      })
+      return
+    }
+    
+    // 检查用户名是否已存在
+    if (User.existsByUsername(username)) {
+      res.status(409).json({
+        success: false,
+        error: 'Username already exists'
+      })
+      return
+    }
+    
+    // 检查系统设置是否允许注册
+    const config = await loadConfig()
+    if (!config.allowRegistration) {
+      res.status(403).json({
+        success: false,
+        error: 'Registration is not allowed'
+      })
+      return
+    }
+    
+    // 创建用户（User.create 内部会处理密码哈希）
+    const newUser = User.create({
+      username,
+      password: password,
+      displayName: displayName || username,
+      role: 'user'
+    })
+    
+    if (!newUser) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create user'
+      })
+      return
+    }
+    
+    // 生成 JWT Token
+    const token = generateToken({
+      id: newUser.id,
+      username: newUser.username,
+      role: newUser.role
+    })
+    
+    // 返回用户信息（不含密码）
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          displayName: newUser.displayName,
+          email: newUser.email,
+          emailVerified: newUser.emailVerified,
+          role: newUser.role
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Register error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Register failed'
+    })
+  }
+}
 
 /**
  * 用户登录
@@ -221,6 +330,7 @@ export async function verifyEmail(req: AuthenticatedRequest, res: Response): Pro
 }
 
 export default {
+  register,
   login,
   logout,
   getCurrentUser,

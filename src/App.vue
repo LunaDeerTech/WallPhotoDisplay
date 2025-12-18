@@ -12,12 +12,18 @@
       @batch-edit-tags="handleBatchEditTags"
       @delete="handleDelete"
       @batch-delete="handleBatchDelete"
+      @login="handleLogin"
     />
     <Sidebar @open-dialog="handleOpenDialog" />
     
     <!-- Global dialogs -->
     <LoginDialog
       v-model="dialogs.login"
+      @success="handleLoginSuccess"
+      @register="handleRegister"
+    />
+    <RegisterDialog
+      v-model="dialogs.register"
       @success="handleLoginSuccess"
     />
     <EmailVerificationDialog 
@@ -84,6 +90,7 @@ import OfflineIndicator from './components/common/OfflineIndicator.vue'
 import Toast from './components/common/Toast.vue'
 import EmailVerificationDialog from '@/components/dialogs/EmailVerificationDialog.vue'
 import LoginDialog from './components/dialogs/LoginDialog.vue'
+import RegisterDialog from './components/dialogs/RegisterDialog.vue'
 import ImageUploadDialog from './components/dialogs/ImageUploadDialog.vue'
 import BrowseSettingsDialog from './components/dialogs/BrowseSettingsDialog.vue'
 import FilterPhotosDialog from './components/dialogs/FilterPhotosDialog.vue'
@@ -123,6 +130,7 @@ const mainContentRef = ref<InstanceType<typeof MainContent> | null>(null)
 // Dialog states
 interface DialogStates {
   login: boolean
+  register: boolean
   imageUpload: boolean
   browseSettings: boolean
   filterPhotos: boolean
@@ -135,6 +143,7 @@ interface DialogStates {
 
 const dialogs = reactive<DialogStates>({
   login: false,
+  register: false,
   imageUpload: false,
   browseSettings: false,
   filterPhotos: false,
@@ -202,6 +211,17 @@ const handleOpenDialog = (dialogName: DialogName): void => {
 const handleLoginSuccess = (): void => {
   // Refresh photos to show user-specific content
   photosStore.fetchPhotos()
+}
+
+// Register handler
+const handleRegister = (): void => {
+  dialogs.login = false
+  dialogs.register = true
+}
+
+// Login handler
+const handleLogin = (): void => {
+  dialogs.login = true
 }
 
 const handleUploadSuccess = (): void => {

@@ -2,12 +2,20 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import authApi from '@/api/auth'
 import { setToken, removeToken, getToken, hasToken } from '@/utils/request'
-import type { User } from '@/types'
+import type { User, UserCreatePayload } from '@/types'
 
 /**
  * 登录结果
  */
 export interface LoginResult {
+  success: boolean
+  error?: string
+}
+
+/**
+ * 注册结果
+ */
+export interface RegisterResult {
   success: boolean
   error?: string
 }
@@ -49,6 +57,32 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Login error:', error)
       const err = error as { error?: string }
       return { success: false, error: err.error ?? 'Login failed' }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 用户注册
+   */
+  async function register(payload: UserCreatePayload): Promise<RegisterResult> {
+    loading.value = true
+    try {
+      const response = await authApi.register(payload)
+      
+      if (response.success && response.data) {
+        // 注册成功后自动登录
+        token.value = response.data.token
+        user.value = response.data.user
+        setToken(response.data.token)
+        return { success: true }
+      } else {
+        return { success: false, error: response.error ?? 'Register failed' }
+      }
+    } catch (error: unknown) {
+      console.error('Register error:', error)
+      const err = error as { error?: string }
+      return { success: false, error: err.error ?? 'Register failed' }
     } finally {
       loading.value = false
     }
@@ -181,6 +215,7 @@ export const useAuthStore = defineStore('auth', () => {
     
     // Actions
     login,
+    register,
     logout,
     fetchCurrentUser,
     updateUserDisplayName,

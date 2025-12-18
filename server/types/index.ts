@@ -253,6 +253,15 @@ export interface LoginRequestBody {
 }
 
 /**
+ * 注册请求体
+ */
+export interface RegisterRequestBody {
+  username: string
+  password: string
+  displayName?: string
+}
+
+/**
  * 登录响应数据
  */
 export interface LoginResponseData {

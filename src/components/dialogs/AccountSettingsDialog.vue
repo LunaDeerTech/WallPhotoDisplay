@@ -6,6 +6,10 @@
     class="account-settings-modal"
     @close="handleClose"
   >
+    <RegisterDialog
+      v-model="showRegister"
+      @success="handleLoginSuccess"
+    />
     <div class="settings-container">
       <!-- Sidebar (Left) -->
       <div class="settings-sidebar" :class="{ 'hidden-mobile': activeSection !== null }">
@@ -61,6 +65,8 @@
             :is="activeComponent" 
             v-if="activeComponent"
             @success="handleLoginSuccess"
+            @register="handleRegister"
+            :showHeader="true"
           />
           <div v-else class="empty-state">
             <p>请选择设置项</p>
@@ -78,7 +84,9 @@ import BrowseSettings from '../settings/BrowseSettings.vue'
 import ProfileSettings from '../settings/ProfileSettings.vue'
 import PhotoManager from '../settings/PhotoManager.vue'
 import LoginForm from '../auth/LoginForm.vue'
+import RegisterDialog from './RegisterDialog.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 
 // Icons
 const IconProfile = h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }, [
@@ -110,6 +118,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 
 // State
@@ -118,6 +127,7 @@ const isOpen = computed({
   set: (value: boolean) => emit('update:modelValue', value)
 })
 
+const showRegister = ref(false)
 const activeSection = ref<string | null>(null)
 
 // Menu Items
@@ -176,6 +186,7 @@ watch(isOpen, (val) => {
 // Methods
 function handleClose() {
   isOpen.value = false
+  showRegister.value = false
 }
 
 function selectSection(id: string) {
@@ -185,6 +196,11 @@ function selectSection(id: string) {
 function handleLoginSuccess() {
   // Stay on profile section, component will switch automatically
   activeSection.value = 'profile'
+  showRegister.value = false
+}
+
+function handleRegister() {
+  showRegister.value = true
 }
 
 function handleLogout() {

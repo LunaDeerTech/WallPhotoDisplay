@@ -1,40 +1,43 @@
 <template>
   <Modal
     v-model="isOpen"
-    title="登录"
-    subtitle="请输入账号和密码"
+    title="注册"
+    subtitle="创建新账号"
     size="sm"
     @close="handleClose"
   >
-    <form class="login-form" @submit.prevent="handleSubmit">
+    <form class="register-form" @submit.prevent="handleSubmit">
       <!-- Username input -->
       <div class="form-group">
-        <label for="login-username" class="form-label">账号</label>
+        <label for="register-username" class="form-label">用户名</label>
         <input
-          id="login-username"
+          id="register-username"
           v-model="form.username"
           type="text"
           class="form-input"
-          placeholder="请输入账号"
+          placeholder="请输入用户名"
           autocomplete="username"
           :disabled="loading"
           required
+          maxlength="20"
         />
+        <span class="help-text">4-20个字符，字母、数字、下划线</span>
       </div>
 
       <!-- Password input -->
       <div class="form-group">
-        <label for="login-password" class="form-label">密码</label>
+        <label for="register-password" class="form-label">密码</label>
         <div class="password-input-wrapper">
           <input
-            id="login-password"
+            id="register-password"
             v-model="form.password"
             :type="showPassword ? 'text' : 'password'"
             class="form-input"
             placeholder="请输入密码"
-            autocomplete="current-password"
+            autocomplete="new-password"
             :disabled="loading"
             required
+            minlength="6"
           />
           <button
             type="button"
@@ -43,6 +46,39 @@
             :aria-label="showPassword ? '隐藏密码' : '显示密码'"
           >
             <svg v-if="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <span class="help-text">至少6个字符</span>
+      </div>
+
+      <!-- Confirm password input -->
+      <div class="form-group">
+        <label for="register-confirm-password" class="form-label">确认密码</label>
+        <div class="password-input-wrapper">
+          <input
+            id="register-confirm-password"
+            v-model="form.confirmPassword"
+            :type="showConfirmPassword ? 'text' : 'password'"
+            class="form-input"
+            placeholder="请再次输入密码"
+            autocomplete="new-password"
+            :disabled="loading"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            @click="showConfirmPassword = !showConfirmPassword"
+            :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'"
+          >
+            <svg v-if="showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
               <line x1="1" y1="1" x2="23" y2="23"/>
             </svg>
@@ -65,20 +101,22 @@
           <span>{{ error }}</span>
         </div>
       </Transition>
+
+      <!-- Success message -->
+      <Transition name="fade">
+        <div v-if="success" class="form-success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span>{{ success }}</span>
+        </div>
+      </Transition>
     </form>
 
     <!-- @vue-ignore -->
     <template #footer>
       <div class="dialog-actions">
-        <button
-          v-if="allowRegistration"
-          type="button"
-          class="btn btn-secondary"
-          @click="handleRegister"
-          :disabled="loading"
-        >
-          注册
-        </button>
         <button
           type="button"
           class="btn btn-secondary"
@@ -98,7 +136,7 @@
               <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
             </svg>
           </span>
-          <span>{{ loading ? '登录中...' : '登录' }}</span>
+          <span>{{ loading ? '注册中...' : '注册' }}</span>
         </button>
       </div>
     </template>
@@ -109,7 +147,6 @@
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useConfigStore } from '@/stores/config'
 
 interface Props {
   modelValue?: boolean
@@ -122,15 +159,14 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'success': []
-  'register': []
 }>()
 
 const authStore = useAuthStore()
-const configStore = useConfigStore()
 
-interface LoginForm {
+interface RegisterForm {
   username: string
   password: string
+  confirmPassword: string
 }
 
 // Local state
@@ -139,31 +175,52 @@ const isOpen = computed({
   set: (value: boolean) => emit('update:modelValue', value)
 })
 
-const form = ref<LoginForm>({
+const form = ref<RegisterForm>({
   username: '',
-  password: ''
+  password: '',
+  confirmPassword: ''
 })
 
 const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
-
-// Computed
-const allowRegistration = computed(() => {
-  return configStore.config?.allowRegistration ?? false
-})
+const success = ref('')
 
 // Form validation
 const isFormValid = computed(() => {
-  return form.value.username.trim() !== '' && form.value.password.trim() !== ''
+  const usernameValid = form.value.username.trim().length >= 4 && 
+                       form.value.username.trim().length <= 20 &&
+                       /^[\w]+$/.test(form.value.username.trim())
+  const passwordValid = form.value.password.length >= 6
+  const passwordsMatch = form.value.password === form.value.confirmPassword
+  
+  return usernameValid && passwordValid && passwordsMatch
 })
+
+// Username validation helper
+const validateUsername = (username: string): string => {
+  const trimmed = username.trim()
+  if (trimmed.length < 4) return '用户名至少需要4个字符'
+  if (trimmed.length > 20) return '用户名不能超过20个字符'
+  if (!/^[\w]+$/.test(trimmed)) return '用户名只能包含字母、数字和下划线'
+  return ''
+}
+
+// Password validation helper
+const validatePassword = (password: string): string => {
+  if (password.length < 6) return '密码至少需要6个字符'
+  return ''
+}
 
 // Reset form when dialog opens
 watch(isOpen, (newValue) => {
   if (newValue) {
-    form.value = { username: '', password: '' }
+    form.value = { username: '', password: '', confirmPassword: '' }
     showPassword.value = false
+    showConfirmPassword.value = false
     error.value = ''
+    success.value = ''
   }
 })
 
@@ -174,28 +231,51 @@ function handleClose(): void {
   }
 }
 
-// Handle register
-function handleRegister(): void {
-  if (!loading.value) {
-    emit('register')
-  }
-}
-
 // Handle submit
 async function handleSubmit(): Promise<void> {
   if (!isFormValid.value || loading.value) return
 
   loading.value = true
   error.value = ''
+  success.value = ''
+
+  // Validate inputs
+  const usernameError = validateUsername(form.value.username)
+  if (usernameError) {
+    error.value = usernameError
+    loading.value = false
+    return
+  }
+
+  const passwordError = validatePassword(form.value.password)
+  if (passwordError) {
+    error.value = passwordError
+    loading.value = false
+    return
+  }
+
+  if (form.value.password !== form.value.confirmPassword) {
+    error.value = '两次输入的密码不一致'
+    loading.value = false
+    return
+  }
 
   try {
-    const result = await authStore.login(form.value.username, form.value.password)
+    const result = await authStore.register({
+      username: form.value.username.trim(),
+      password: form.value.password
+    })
     
     if (result.success) {
-      emit('success')
-      isOpen.value = false
+      success.value = '注册成功！正在跳转...'
+      
+      // authStore.register() 已经自动完成了登录，只需延迟后关闭对话框
+      setTimeout(() => {
+        emit('success')
+        isOpen.value = false
+      }, 1000)
     } else {
-      error.value = result.error || '登录失败，请检查账号和密码'
+      error.value = result.error || '注册失败，请稍后重试'
     }
   } catch (e) {
     error.value = '网络错误，请稍后重试'
@@ -206,7 +286,7 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <style scoped>
-.login-form {
+.register-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
@@ -286,6 +366,11 @@ async function handleSubmit(): Promise<void> {
   height: 20px;
 }
 
+.help-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
 .form-error {
   display: flex;
   align-items: center;
@@ -298,6 +383,23 @@ async function handleSubmit(): Promise<void> {
 }
 
 .form-error svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.form-success {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: rgba(52, 199, 89, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+}
+
+.form-success svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;

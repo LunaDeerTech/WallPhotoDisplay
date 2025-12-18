@@ -1,9 +1,16 @@
 import express from 'express'
 const Router = express.Router
-import { login, logout, getCurrentUser, sendVerificationCode, verifyEmail } from '../controllers/authController.js'
+import { register, login, logout, getCurrentUser, sendVerificationCode, verifyEmail } from '../controllers/authController.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
+
+/**
+ * @route POST /api/auth/register
+ * @desc 用户注册
+ * @access Public
+ */
+router.post('/register', register)
 
 /**
  * @route POST /api/auth/login

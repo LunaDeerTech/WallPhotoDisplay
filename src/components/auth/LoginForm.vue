@@ -88,6 +88,18 @@
           <span>{{ loading ? '登录中...' : '登录' }}</span>
         </button>
       </div>
+
+      <!-- 注册按钮 - 放在登录按钮下方 -->
+      <div v-if="shouldShowRegistration" class="register-actions">
+        <button
+          type="button"
+          class="btn btn-secondary btn-block"
+          @click="$emit('register')"
+          :disabled="loading"
+        >
+          注册新账号
+        </button>
+      </div>
     </form>
   </div>
 </template>
@@ -95,20 +107,31 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 
 interface Props {
   showHeader?: boolean
   showCancel?: boolean
+  allowRegistration?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   showHeader: false,
-  showCancel: false
+  showCancel: false,
+  allowRegistration: undefined
+})
+
+const configStore = useConfigStore()
+
+// Use prop if provided, otherwise fall back to config
+const shouldShowRegistration = computed(() => {
+  return props.allowRegistration ?? configStore.config?.allowRegistration ?? false
 })
 
 const emit = defineEmits<{
   'success': [],
-  'cancel': []
+  'cancel': [],
+  'register': []
 }>()
 
 const authStore = useAuthStore()
@@ -281,6 +304,14 @@ async function handleSubmit(): Promise<void> {
   justify-content: flex-end;
   gap: var(--spacing-md);
   margin-top: var(--spacing-sm);
+}
+
+.register-actions {
+  margin-top: var(--spacing-sm);
+}
+
+.btn-block {
+  width: 100%;
 }
 
 .btn {
