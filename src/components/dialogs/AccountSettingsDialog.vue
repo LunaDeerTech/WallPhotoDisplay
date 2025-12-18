@@ -86,7 +86,6 @@ import PhotoManager from '../settings/PhotoManager.vue'
 import LoginForm from '../auth/LoginForm.vue'
 import RegisterDialog from './RegisterDialog.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useConfigStore } from '@/stores/config'
 
 // Icons
 const IconProfile = h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }, [
@@ -118,7 +117,6 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const configStore = useConfigStore()
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 
 // State
