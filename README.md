@@ -125,6 +125,7 @@ npm run start
 ## 📄 开发计划
 
 ### Milestone 1: MVP
+> Claude Opus 4.5 & Gemini 3 Pro
 - [x] 多用户创建与登录
 - [x] 瀑布流照片展示
 - [x] 照片标签管理与筛选
@@ -132,22 +133,22 @@ npm run start
 - [x] PWA 支持与离线访问
 
 ### Milestone 2: Enhancements
-- [x] 按用户筛选图片
-- [x] 系统设置菜单
-- [x] 系统设置-是否开放注册
-- [x] 上传审核
-- [x] 系统设置-上传是否需要审核
-- [x] 系统设置-是否强制需要登录才能查看
-- [x] 系统设置-SMTP邮件服务器配置
-- [x] 集成SMTP邮件发送功能
-- [x] 用户注册功能（需要邮件激活）
-- [x] 密码重置功能
+- [x] 按用户筛选图片 `Gemini 3 Pro`
+- [x] 系统设置菜单 `Gemini 3 Pro`
+- [x] 系统设置-是否开放注册 `Gemini 3 Pro`
+- [x] 上传审核 `Gemini 3 Pro`
+- [x] 系统设置-上传是否需要审核 `Gemini 3 Pro`
+- [x] 系统设置-是否强制需要登录才能查看 `Gemini 3 Pro`
+- [x] 系统设置-SMTP邮件服务器配置 `MiMo v2 flash`
+- [x] 集成SMTP邮件发送功能 `MiMo v2 flash`
+- [x] 用户注册功能（需要邮件激活） `MiMo v2 flash`
+- [x] 密码重置功能 `MiMo v2 flash` `Gemini 3 Pro`
 - [ ] 长时间无关联图片的 Tag 自动清理
 
 ### Milestone 3: Enrichments
-- [x] 账号封禁/停用功能
+- [x] 账号封禁/停用功能 `MiMo v2 flash`
 - [ ] 多语言 i18n 支持
-- [x] 图片点赞
+- [x] 图片点赞 `MiMo v2 flash` `Gemini 3 Pro`
 - [ ] 图片可见性设置（公开/私密）
 - [ ] 图片管理以时间线形式展示
 - [ ] 图片管理按时间筛选
