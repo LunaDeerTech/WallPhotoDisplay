@@ -9,6 +9,91 @@
         <!-- Backdrop -->
         <div class="viewer-backdrop" @click="close" />
 
+        <!-- Top Toolbar (Zoom Controls & Actions) -->
+        <div class="viewer-top-toolbar">
+          <div class="toolbar-center">
+            <!-- Zoom controls -->
+            <button
+              class="toolbar-btn"
+              @click="zoomOut"
+              :disabled="scale <= minScale"
+              title="缩小"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+                <path d="M8 11h6"/>
+              </svg>
+            </button>
+
+            <span class="zoom-level">{{ Math.round(scale * 100) }}%</span>
+
+            <button
+              class="toolbar-btn"
+              @click="zoomIn"
+              :disabled="scale >= maxScale"
+              title="放大"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+                <path d="M11 8v6M8 11h6"/>
+              </svg>
+            </button>
+
+            <button
+              class="toolbar-btn"
+              @click="resetZoom"
+              title="重置"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="toolbar-right">
+            <!-- Like button -->
+            <button
+              class="toolbar-btn"
+              :class="{ 'is-liked': currentPhoto?.isLiked }"
+              @click="toggleLike"
+              title="点赞"
+            >
+              <svg v-if="currentPhoto?.isLiked" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+
+            <!-- Download button -->
+            <button
+              class="toolbar-btn"
+              @click="download"
+              title="下载"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+
+            <!-- Close button -->
+            <button
+              class="toolbar-btn toolbar-btn-close"
+              @click="close"
+              title="关闭"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
         <!-- Navigation buttons -->
         <button
           v-if="hasPrev"
@@ -75,73 +160,6 @@
               </span>
             </div>
           </div>
-
-          <div class="toolbar-center">
-            <!-- Zoom controls -->
-            <button
-              class="toolbar-btn"
-              @click="zoomOut"
-              :disabled="scale <= minScale"
-              title="缩小"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
-                <path d="M8 11h6"/>
-              </svg>
-            </button>
-
-            <span class="zoom-level">{{ Math.round(scale * 100) }}%</span>
-
-            <button
-              class="toolbar-btn"
-              @click="zoomIn"
-              :disabled="scale >= maxScale"
-              title="放大"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
-                <path d="M11 8v6M8 11h6"/>
-              </svg>
-            </button>
-
-            <button
-              class="toolbar-btn"
-              @click="resetZoom"
-              title="重置"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="toolbar-right">
-            <!-- Download button -->
-            <button
-              class="toolbar-btn"
-              @click="download"
-              title="下载"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </button>
-
-            <!-- Close button -->
-            <button
-              class="toolbar-btn toolbar-btn-close"
-              @click="close"
-              title="关闭"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
         </div>
 
         <!-- Thumbnail strip (optional) -->
@@ -187,6 +205,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'close': []
   'change': [index: number, photo: Photo]
+  'like': [photo: Photo]
 }>()
 
 // Refs
@@ -290,6 +309,11 @@ function download(): void {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+function toggleLike(): void {
+  if (!currentPhoto.value) return
+  emit('like', currentPhoto.value)
 }
 
 // Event handlers
@@ -528,6 +552,39 @@ onUnmounted(() => {
   to { transform: rotate(360deg); }
 }
 
+/* Top Toolbar */
+.viewer-top-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-md);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  z-index: 20;
+  pointer-events: none; /* Let clicks pass through to backdrop */
+}
+
+.viewer-top-toolbar .toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  pointer-events: auto; /* Re-enable clicks for buttons */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.viewer-top-toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  pointer-events: auto;
+  position: absolute;
+  right: var(--spacing-md);
+}
+
 /* Toolbar */
 .viewer-toolbar {
   position: absolute;
@@ -539,20 +596,14 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: var(--spacing-md) var(--spacing-lg);
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  z-index: 20;
 }
 
 .toolbar-left,
-.toolbar-center,
 .toolbar-right {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-}
-
-.toolbar-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .photo-info {
@@ -575,6 +626,11 @@ onUnmounted(() => {
   color: white;
   transition: all var(--transition-fast);
   backdrop-filter: blur(8px);
+}
+
+.toolbar-btn.is-liked {
+  color: #ef4444;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .toolbar-btn:hover:not(:disabled) {

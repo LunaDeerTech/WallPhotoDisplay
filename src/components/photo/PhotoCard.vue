@@ -94,24 +94,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Hover overlay -->
-    <div class="photo-hover-overlay">
-      <div class="hover-actions">
-        <button
-          type="button"
-          class="hover-action-btn"
-          @click.stop="$emit('view', photo)"
-          title="查看大图"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
-            <path d="M11 8v6M8 11h6"/>
-          </svg>
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -441,62 +423,6 @@ onMounted(() => {
 .like-count {
   font-size: var(--font-size-xs);
   font-weight: 500;
-}
-
-/* Hover overlay */
-.photo-hover-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0);
-  opacity: 0;
-  transition: all var(--transition-normal);
-  pointer-events: none;
-}
-
-.photo-card:not(.photo-card-selectable):hover .photo-hover-overlay {
-  background-color: rgba(0, 0, 0, 0.3);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.hover-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.hover-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: var(--radius-round);
-  color: var(--color-text-primary);
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
-  transform: scale(0.9);
-}
-
-.photo-card:hover .hover-action-btn {
-  transform: scale(1);
-}
-
-.hover-action-btn:hover {
-  background-color: white;
-  transform: scale(1.1);
-}
-
-.hover-action-btn:active {
-  transform: scale(0.95);
-}
-
-.hover-action-btn svg {
-  width: 20px;
-  height: 20px;
 }
 
 /* Loading state */
