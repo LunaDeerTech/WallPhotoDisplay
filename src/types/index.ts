@@ -40,6 +40,9 @@ export interface Photo {
   width?: number
   height?: number
   status: 'pending' | 'approved' | 'rejected'
+  // Like fields (optional for now)
+  likeCount?: number
+  isLiked?: boolean
 }
 
 export interface PhotoUploadPayload {

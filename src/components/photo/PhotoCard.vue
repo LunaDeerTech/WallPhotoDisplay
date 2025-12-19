@@ -61,22 +61,36 @@
       </div>
     </div>
 
-    <!-- Photo info overlay -->
-    <div v-if="showInfo" class="photo-info">
-      <div class="photo-info-content">
-        <!-- Tags -->
-        <div v-if="photo.tags && photo.tags.length > 0" class="photo-tags">
-          <span v-for="tag in displayTags" :key="tag.id" class="photo-tag">
-            #{{ tag.name }}
-          </span>
-          <span v-if="photo.tags.length > maxDisplayTags" class="photo-tag-more">
-            +{{ photo.tags.length - maxDisplayTags }}
-          </span>
+    <!-- Photo Footer Info -->
+    <div v-if="showInfo" class="photo-footer">
+      <!-- Tags -->
+      <div v-if="photo.tags && photo.tags.length > 0" class="photo-tags">
+        <span v-for="tag in displayTags" :key="tag.id" class="photo-tag">
+          #{{ tag.name }}
+        </span>
+        <span v-if="photo.tags.length > maxDisplayTags" class="photo-tag-more">
+          +{{ photo.tags.length - maxDisplayTags }}
+        </span>
+      </div>
+      
+      <!-- Meta Info Row -->
+      <div class="photo-meta">
+        <!-- Uploader -->
+        <div class="photo-uploader">
+          <span v-if="showUploader && photo.uploaderName" class="uploader-name">@{{ photo.uploaderName }}</span>
         </div>
         
-        <!-- Uploader info -->
-        <div v-if="showUploader && photo.uploaderName" class="photo-uploader">
-          <span class="uploader-name">{{ photo.uploaderName }}</span>
+        <!-- Like Button -->
+        <div class="photo-like">
+          <div class="like-display" :class="{ 'is-liked': photo.isLiked }">
+            <svg v-if="photo.isLiked" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span class="like-count">{{ photo.likeCount || 0 }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -361,39 +375,34 @@ onMounted(() => {
   font-size: var(--font-size-sm);
 }
 
-/* Photo info overlay */
-.photo-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: var(--spacing-md);
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-.photo-info-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+/* Photo Footer */
+.photo-footer {
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-primary);
+  /* border-top: 1px solid var(--color-border-light); */
 }
 
 .photo-tags {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
 }
 
 .photo-tag {
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: var(--color-text-secondary);
 }
 
 .photo-tag-more {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
+}
+
+.photo-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .photo-uploader {
@@ -404,7 +413,34 @@ onMounted(() => {
 
 .uploader-name {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-muted);
+}
+
+.photo-like {
+  display: flex;
+  align-items: center;
+}
+
+.like-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.like-display.is-liked {
+  color: #ef4444;
+}
+
+.like-display svg {
+  width: 16px;
+  height: 16px;
+}
+
+.like-count {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
 }
 
 /* Hover overlay */

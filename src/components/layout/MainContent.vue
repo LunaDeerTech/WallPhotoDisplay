@@ -248,7 +248,7 @@ defineExpose({
 .main-content {
   position: relative;
   min-height: 100vh;
-  background-color: var(--color-bg-primary);
+  background-color: var(--color-bg-page);
   /* Leave space for floating sidebar on left */
   padding-left: calc(var(--sidebar-width) + var(--spacing-lg) * 2);
 }

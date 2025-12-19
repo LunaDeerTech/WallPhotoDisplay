@@ -180,6 +180,12 @@ function calculateLayout(): void {
       itemHeight = width * 0.75
     }
 
+    // Add footer height estimate if info is shown
+    // This is an approximation since tag height varies
+    if (props.showInfo) {
+      itemHeight += 70 
+    }
+
     // Store position
     itemPositions.value.set(photo.id, {
       x,
