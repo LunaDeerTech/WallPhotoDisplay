@@ -1,141 +1,111 @@
 # Wall Photo Display - AI Coding Instructions
 
-A multi-user photo wall PWA with Vue 3 + TypeScript frontend and Express.js backend. See `guidelines-claude-opus.md` for UI/UX specifications in Chinese.
+Multi-user photo wall PWA: Vue 3 + TypeScript frontend, Express.js + SQLite backend. See [guidelines-claude-opus.md](../guidelines-claude-opus.md) for detailed UI/UX specs (Chinese).
 
-## Architecture & Data Flow
-
-```
-Frontend (src/)                Backend (server/)              Storage
-┌─────────────────┐           ┌─────────────────┐           ┌──────────┐
-│ Vue Components  │──Axios────│ Express Routes  │───────────│ SQLite   │
-│ + Pinia Stores  │  /api/*   │ + Controllers   │           │ data/*.db│
-└─────────────────┘           └─────────────────┘           └──────────┘
-                                     │                       ┌──────────┐
-                              Multer + Sharp ────────────────│ uploads/ │
-                              (UUID filenames, thumbnails)   └──────────┘
-```
-
-**Key directories:**
-- `server/types/index.ts` - Backend types (snake_case DB entities → camelCase API responses)
-- `src/types/index.ts` - Frontend types (must match API response shapes)
-- `src/styles/variables.css` - iOS-style CSS variables (`--color-*`, `--spacing-*`, `--radius-*`)
-- `data/config.json` - Runtime system config (siteName, forceLogin, uploadReview)
-
-## Development Commands
+## Quick Start
 
 ```bash
-npm run dev          # Concurrent: tsx watch server + Vite
+npm run dev          # Concurrent: tsx watch server + Vite client
 npm run init-db      # Initialize SQLite + default admin (admin/admin123)
-npm run build:all    # Build client (vite) + server (tsc)
+npm run build:all    # Build client + server for production
 npm run typecheck    # Validate both frontend and backend TypeScript
 ```
 
-## TypeScript Conventions
+## Architecture
 
-**Backend (ES Modules):** All imports MUST use `.js` extension even for `.ts` files:
+```
+src/ (Vue 3)              server/ (Express)           data/
+├── api/        ──────────► routes/ → controllers/    ├── photowall.db
+├── stores/     Axios       models/ (SQL aliases)     ├── uploads/
+├── components/ /api/*      middleware/auth.ts        └── config.json
+└── types/                  types/index.ts
+```
+
+## Critical TypeScript Rules
+
+**Backend imports MUST use `.js` extension** (ES Modules requirement):
 ```typescript
 // server/controllers/photoController.ts
-import { Photo } from '../models/index.js'  // NOT index.ts
+import Photo from '../models/Photo.js'  // ✓ NOT Photo.ts
 ```
 
-**Type transformation:** DB entities use snake_case, API responses use camelCase. Models transform via SQL aliases:
+**Type naming convention** - DB uses snake_case, API uses camelCase:
 ```typescript
-// server/models/Photo.ts - SQL alias pattern
-const stmt = db.prepare(`
-  SELECT p.user_id as userId, p.file_path as filePath, ...
-  FROM photos p
-`)
+// server/types/index.ts: UserEntity (DB) vs UserPublic (API response)
+// Models transform via SQL aliases: SELECT user_id as userId ...
 ```
 
-## API Response Pattern
+## API Pattern
 
-All endpoints return `{ success: boolean, data?: T, error?: string }`. Frontend uses response interceptor that unwraps to `data`:
+All endpoints: `{ success: boolean, data?: T, error?: string }`
+
+Frontend interceptor ([src/utils/request.ts](../src/utils/request.ts)) unwraps `response.data`:
 ```typescript
-// src/utils/request.ts - Response interceptor returns response.data directly
-// src/api/photos.ts - Returns ApiResponse<T> type
+// src/api/photos.ts
 getPhotos(params): Promise<ApiResponse<PhotoListResponse>>
+```
+
+## Auth Middleware (server/middleware/auth.ts)
+
+Apply in order on routes:
+- `optionalAuthMiddleware` - Public routes, `req.user` may be undefined
+- `authMiddleware` - Requires valid JWT, attaches `req.user: JwtPayload`
+- `adminMiddleware` - Requires `req.user.role === 'admin'`
+
+```typescript
+router.get('/', optionalAuthMiddleware, getPhotos)           // Public
+router.post('/', authMiddleware, uploadPhotos)               // Login required
+router.get('/pending', authMiddleware, adminMiddleware, ...)  // Admin only
 ```
 
 ## Component Patterns
 
-**Dialogs** (`src/components/dialogs/`): Use `Modal.vue` wrapper with `v-model`:
+**Dialogs**: Wrap with [Modal.vue](../src/components/common/Modal.vue):
 ```vue
 <Modal v-model="isOpen" title="标题" size="md">
-  <!-- content -->
   <template #footer><!-- actions --></template>
 </Modal>
 ```
 
-**Tags:** Parse with `#` prefix regex: `/#([^\s#]+)/g`. Filter invalid chars with `/^[\w\u4e00-\u9fa5\-]+$/`. Use `TagInput.vue` for creation, `TagSelector.vue` for filtering.
-
-**Pinia Stores:** Use composition API style (`defineStore` with setup function). See `src/stores/auth.ts` for pattern.
-
-## Auth Middleware Chain
-
-Backend routes MUST apply middleware in order:
+**Pinia stores**: Composition API style ([src/stores/auth.ts](../src/stores/auth.ts)):
 ```typescript
-// server/routes/photos.ts - Example patterns
-router.get('/', optionalAuthMiddleware, getPhotos)        // Public with optional user context
-router.post('/', authMiddleware, uploadPhotos)            // Requires login
-router.get('/pending', authMiddleware, adminMiddleware, getPendingPhotos)  // Admin only
-```
-- `authMiddleware` - Validates JWT, attaches `req.user: JwtPayload`, rejects if missing
-- `adminMiddleware` - Requires `req.user.role === 'admin'`
-- `optionalAuthMiddleware` - Validates token if present, continues with `req.user = undefined` if not
-
-## File Upload Flow
-
-1. Frontend: Send `FormData` with field `photos` (array) + `tags` string (`#tag1 #tag2`)
-2. Backend: `multer` saves with UUID filename, `sharp` generates `thumb_<uuid>` thumbnail
-3. Photo status: `pending` (if `uploadReview` enabled) or `approved`
-4. Response: Photo object with computed `url` and `thumbnailUrl` fields
-
-Upload limits defined in `server/middleware/upload.ts`: 10MB max, 20 files max, JPEG/PNG/GIF/WebP only.
-
-## Styling (iOS-like)
-
-Use CSS variables from `src/styles/variables.css`. Theme applied via `data-theme` attribute on `<html>`:
-```css
-.btn-primary {
-  background: var(--color-accent);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref<User | null>(null)
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  return { user, isAdmin }
+})
 ```
 
-## System Config
-
-Runtime config stored in `data/config.json`, managed via `useConfigStore`. Key flags:
-- `forceLogin` - Require authentication to view photos
-- `uploadReview` - New uploads require admin approval
+**Tags**: Parse `#tag` format with `/#([^\s#]+)/g`, validate with `/^[\w\u4e00-\u9fa5\-]+$/`
 
 ## Database Migrations
 
-Schema changes use `server/utils/migrator.ts`. Add new migrations to the `migrations` array:
+Add to `migrations` array in [server/utils/migrator.ts](../server/utils/migrator.ts):
 ```typescript
-// server/utils/migrator.ts - Add to migrations array
 {
-  name: '002_add_new_column',  // Sequential naming: 00X_description
+  name: '003_add_feature',  // Sequential: 00X_description
   up: () => {
-    // Check column existence first (idempotent)
-    const columns = db.pragma('table_info(table_name)') as Array<{ name: string }>
-    if (!columns.some(col => col.name === 'new_column')) {
-      db.exec("ALTER TABLE table_name ADD COLUMN new_column VARCHAR(50) DEFAULT 'value'")
+    const cols = db.pragma('table_info(table)') as Array<{ name: string }>
+    if (!cols.some(c => c.name === 'new_col')) {
+      db.exec("ALTER TABLE table ADD COLUMN new_col VARCHAR(50) DEFAULT 'val'")
     }
   }
 }
 ```
+Migrations auto-run on server start. Always check existence (idempotent). Update types in both `server/types/` and `src/types/`.
 
-**Key points:**
-- Migrations run automatically on server start via `runMigrations()`
-- Each migration runs in a transaction and is tracked in `migrations` table
-- Always check if column/table exists before altering (makes migrations idempotent)
-- Update corresponding types in `server/types/index.ts` and `src/types/index.ts`
+## Styling
 
-## Key Implementation Details
+Use CSS variables from [src/styles/variables.css](../src/styles/variables.css). Theme via `data-theme` on `<html>`:
+```css
+background: var(--color-accent);
+border-radius: var(--radius-md);
+```
 
-- **Waterfall layout** (`src/composables/useWaterfall.ts`): Items placed in shortest column, recalculates on resize
-- **Token storage**: `localStorage` key `photowall_token`, JWT expires in 7 days
-- **Auth events**: `window.dispatchEvent(new CustomEvent('auth:unauthorized'))` on 401 response
-- **Batch operations**: Always verify ownership of ALL items before processing
-- **Photo paths**: Stored relative in DB (`<uuid>.jpg`), served via `/uploads/` static route
+## Key Details
+
+- **Token**: `localStorage` key `photowall_token`, 7-day JWT expiry
+- **Auth events**: `window.dispatchEvent(new CustomEvent('auth:unauthorized'))` on 401
+- **Upload limits**: 10MB/file, 20 files/batch, JPEG/PNG/GIF/WebP only
+- **Photo storage**: UUID filenames, `thumb_<uuid>` thumbnails, relative paths in DB
+- **Config**: Runtime flags in `data/config.json` (`forceLogin`, `uploadReview`)
