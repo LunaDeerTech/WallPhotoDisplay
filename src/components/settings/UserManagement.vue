@@ -70,11 +70,33 @@
               <span class="role-badge" :class="user.role">
                 {{ user.role === 'admin' ? '管理员' : '用户' }}
               </span>
+              <span v-if="user.isBanned" class="banned-badge">
+                已封禁
+              </span>
             </div>
             <span class="user-username">@{{ user.username }}</span>
           </div>
           
           <div class="user-actions">
+            <!-- Ban/Unban button -->
+            <button
+              v-if="user.id !== authStore.user?.id"
+              type="button"
+              class="action-btn"
+              :class="user.isBanned ? 'success' : 'warning'"
+              :title="user.isBanned ? '解封用户' : '封禁用户'"
+              @click="handleBanToggle(user)"
+            >
+              <svg v-if="user.isBanned" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M4.93 4.93l14.14 14.14"/>
+              </svg>
+            </button>
+            
             <button
               type="button"
               class="action-btn"
@@ -271,6 +293,64 @@
         </div>
       </template>
     </Modal>
+
+    <!-- Ban/Unban user dialog -->
+    <Modal
+      v-model="showBanConfirm"
+      :title="banTargetUser?.isBanned ? '解封用户' : '封禁用户'"
+      size="sm"
+    >
+      <div v-if="banTargetUser?.isBanned" class="confirm-message">
+        确定要解封用户 <strong>{{ banTargetUser?.displayName || banTargetUser?.username }}</strong> 吗？<br />
+        解封后用户可以正常登录和访问系统。
+      </div>
+      <div v-else class="ban-form">
+        <p class="confirm-message">
+          确定要封禁用户 <strong>{{ banTargetUser?.displayName || banTargetUser?.username }}</strong> 吗？<br />
+          封禁后用户将无法登录，且所有上传的图片都将不可见。
+        </p>
+        <div class="form-group" style="margin-top: var(--spacing-md);">
+          <label for="ban-reason" class="form-label">封禁理由 <span class="required">*</span></label>
+          <textarea
+            id="ban-reason"
+            v-model="banReason"
+            class="form-input"
+            placeholder="请输入封禁理由（必填）"
+            :disabled="banLoading"
+            rows="3"
+            maxlength="500"
+          />
+          <p class="form-hint">封禁理由将对管理员可见，用户登录时也会看到</p>
+        </div>
+      </div>
+      
+      <!-- @vue-ignore -->
+      <template #footer>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" @click="showBanConfirm = false" :disabled="banLoading">
+            取消
+          </button>
+          <button
+            v-if="banTargetUser?.isBanned"
+            type="button"
+            class="btn btn-primary"
+            @click="confirmBanUser"
+            :disabled="banLoading"
+          >
+            {{ banLoading ? '解封中...' : '解封' }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="btn btn-danger"
+            @click="confirmBanUser"
+            :disabled="banLoading || !banReason.trim()"
+          >
+            {{ banLoading ? '封禁中...' : '封禁' }}
+          </button>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -324,6 +404,12 @@ const resetPasswordForm = reactive<ResetPasswordForm>({
 const showDeleteConfirm = ref(false)
 const deleteLoading = ref(false)
 const deleteTargetUser = ref<User | null>(null)
+
+// Ban/Unban user state
+const showBanConfirm = ref(false)
+const banLoading = ref(false)
+const banTargetUser = ref<User | null>(null)
+const banReason = ref('')
 
 // Computed
 const filteredUsers = computed(() => {
@@ -462,6 +548,54 @@ async function confirmDeleteUser(): Promise<void> {
     deleteLoading.value = false
   }
 }
+
+// Handle ban/unban user
+function handleBanToggle(user: User): void {
+  banTargetUser.value = user
+  banReason.value = ''
+  showBanConfirm.value = true
+}
+
+async function confirmBanUser(): Promise<void> {
+  if (!banTargetUser.value || banLoading.value) return
+  
+  // 封禁需要理由
+  if (!banTargetUser.value.isBanned && !banReason.value.trim()) {
+    return
+  }
+  
+  banLoading.value = true
+  
+  try {
+    let response
+    if (banTargetUser.value.isBanned) {
+      // 解封
+      response = await usersApi.unban(banTargetUser.value.id)
+    } else {
+      // 封禁
+      response = await usersApi.ban(banTargetUser.value.id, banReason.value.trim())
+    }
+    
+    if (response.success) {
+      showBanConfirm.value = false
+      banTargetUser.value = null
+      banReason.value = ''
+      await fetchUsers()
+    }
+  } catch (error) {
+    console.error('Ban/Unban user error:', error)
+  } finally {
+    banLoading.value = false
+  }
+}
+
+// Reset ban form when dialog closes
+watch(showBanConfirm, (newValue) => {
+  if (!newValue) {
+    banReason.value = ''
+    banTargetUser.value = null
+  }
+})
 
 onMounted(() => {
   fetchUsers()
@@ -642,6 +776,16 @@ onMounted(() => {
   color: var(--color-accent);
 }
 
+.banned-badge {
+  display: inline-flex;
+  padding: 2px var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-pill);
+  background-color: rgba(255, 59, 48, 0.15);
+  color: var(--color-error);
+}
+
 .user-actions {
   display: flex;
   gap: var(--spacing-sm);
@@ -669,6 +813,16 @@ onMounted(() => {
 .action-btn.danger:hover {
   border-color: var(--color-error);
   color: var(--color-error);
+}
+
+.action-btn.warning:hover {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.action-btn.success:hover {
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 
 .action-btn svg {

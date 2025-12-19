@@ -15,6 +15,10 @@ interface UserRow {
   role: 'admin' | 'user'
   createdAt: string
   updatedAt: string
+  isBanned: number // SQLite returns 0/1
+  bannedReason?: string
+  bannedAt?: string
+  bannedBy?: number
 }
 
 interface UserRowWithPassword extends UserRow {
@@ -50,14 +54,17 @@ const User = {
    */
   findById(id: number): UserPublic | null {
     const stmt = db.prepare(`
-      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role,
+             is_banned as isBanned, banned_reason as bannedReason, banned_at as bannedAt, banned_by as bannedBy,
+             created_at as createdAt, updated_at as updatedAt
       FROM users WHERE id = ?
     `)
-    const row = stmt.get(id) as UserRow | undefined
+    const row = stmt.get(id) as (UserRow & { isBanned: number, bannedReason?: string, bannedAt?: string, bannedBy?: number }) | undefined
     if (!row) return null
     return {
       ...row,
-      emailVerified: Boolean(row.emailVerified)
+      emailVerified: Boolean(row.emailVerified),
+      isBanned: Boolean(row.isBanned)
     }
   },
 
@@ -66,14 +73,17 @@ const User = {
    */
   findByUsername(username: string): UserWithPassword | null {
     const stmt = db.prepare(`
-      SELECT id, username, password, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, password, display_name as displayName, email, email_verified as emailVerified, role,
+             is_banned as isBanned, banned_reason as bannedReason, banned_at as bannedAt, banned_by as bannedBy,
+             created_at as createdAt, updated_at as updatedAt
       FROM users WHERE username = ?
     `)
-    const row = stmt.get(username) as UserRowWithPassword | undefined
+    const row = stmt.get(username) as (UserRowWithPassword & { isBanned: number, bannedReason?: string, bannedAt?: string, bannedBy?: number }) | undefined
     if (!row) return null
     return {
       ...row,
-      emailVerified: Boolean(row.emailVerified)
+      emailVerified: Boolean(row.emailVerified),
+      isBanned: Boolean(row.isBanned)
     }
   },
 
@@ -82,13 +92,16 @@ const User = {
    */
   findByEmail(email: string): UserPublic[] {
     const stmt = db.prepare(`
-      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role,
+             is_banned as isBanned, banned_reason as bannedReason, banned_at as bannedAt, banned_by as bannedBy,
+             created_at as createdAt, updated_at as updatedAt
       FROM users WHERE email = ?
     `)
-    const rows = stmt.all(email) as UserRow[]
+    const rows = stmt.all(email) as Array<UserRow & { isBanned: number, bannedReason?: string, bannedAt?: string, bannedBy?: number }>
     return rows.map(row => ({
       ...row,
-      emailVerified: Boolean(row.emailVerified)
+      emailVerified: Boolean(row.emailVerified),
+      isBanned: Boolean(row.isBanned)
     }))
   },
 
@@ -97,13 +110,16 @@ const User = {
    */
   findAll(): UserPublic[] {
     const stmt = db.prepare(`
-      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
+      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role,
+             is_banned as isBanned, banned_reason as bannedReason, banned_at as bannedAt, banned_by as bannedBy,
+             created_at as createdAt, updated_at as updatedAt
       FROM users ORDER BY created_at DESC
     `)
-    const rows = stmt.all() as UserRow[]
+    const rows = stmt.all() as Array<UserRow & { isBanned: number, bannedReason?: string, bannedAt?: string, bannedBy?: number }>
     return rows.map(row => ({
       ...row,
-      emailVerified: Boolean(row.emailVerified)
+      emailVerified: Boolean(row.emailVerified),
+      isBanned: Boolean(row.isBanned)
     }))
   },
 
@@ -175,7 +191,6 @@ const User = {
     return !!stmt.get(...params)
   },
 
-
   /**
    * 更新用户密码
    */
@@ -220,6 +235,41 @@ const User = {
   count(): number {
     const stmt = db.prepare('SELECT COUNT(*) as count FROM users')
     return (stmt.get() as CountRow).count
+  },
+
+  /**
+   * 封禁用户
+   */
+  ban(id: number, reason: string, adminId: number): boolean {
+    const stmt = db.prepare(`
+      UPDATE users 
+      SET is_banned = 1, banned_reason = ?, banned_at = CURRENT_TIMESTAMP, banned_by = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `)
+    const result = stmt.run(reason, adminId, id)
+    return result.changes > 0
+  },
+
+  /**
+   * 解封用户
+   */
+  unban(id: number): boolean {
+    const stmt = db.prepare(`
+      UPDATE users 
+      SET is_banned = 0, banned_reason = NULL, banned_at = NULL, banned_by = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `)
+    const result = stmt.run(id)
+    return result.changes > 0
+  },
+
+  /**
+   * 检查用户是否被封禁
+   */
+  isBanned(id: number): boolean {
+    const stmt = db.prepare('SELECT is_banned FROM users WHERE id = ?')
+    const row = stmt.get(id) as { is_banned: number } | undefined
+    return row ? Boolean(row.is_banned) : false
   }
 }
 

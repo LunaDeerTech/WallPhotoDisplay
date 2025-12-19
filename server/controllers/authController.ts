@@ -153,6 +153,17 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
       })
       return
     }
+
+    // 检查用户是否被封禁
+    if (user.isBanned) {
+      res.status(403).json({
+        success: false,
+        error: '您的账号已被封禁，无法登录',
+        bannedReason: user.bannedReason,
+        bannedAt: user.bannedAt
+      })
+      return
+    }
     
     // 生成 JWT Token
     const token = generateToken({

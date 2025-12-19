@@ -145,6 +145,7 @@ npm run start
 - [ ] 长时间无关联图片的 Tag 自动清理
 
 ### Milestone 3: Enrichments
+- [x] 账号封禁/停用功能
 - [ ] 多语言 i18n 支持
 - [x] 图片点赞
 - [ ] 图片可见性设置（公开/私密）
@@ -155,6 +156,6 @@ npm run start
 
 ### Milestone 4: Advanced Features
 - [ ] 图片评论功能
-- [ ] 举报/封禁/审核功能
+- [ ] 举报/审核功能
 - [ ] 排行榜
 - [ ] 外部AI图片审核

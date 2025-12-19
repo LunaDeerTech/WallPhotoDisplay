@@ -6,7 +6,9 @@ import {
   createUser,
   updateUser,
   deleteUser,
-  updatePassword
+  updatePassword,
+  banUser,
+  unbanUser
 } from '../controllers/userController.js'
 import { authMiddleware, adminMiddleware } from '../middleware/auth.js'
 
@@ -53,5 +55,19 @@ router.delete('/:id', authMiddleware, adminMiddleware, deleteUser)
  * @access Admin or Self
  */
 router.put('/:id/password', authMiddleware, updatePassword)
+
+/**
+ * @route PUT /api/users/:id/ban
+ * @desc 封禁用户
+ * @access Admin
+ */
+router.put('/:id/ban', authMiddleware, adminMiddleware, banUser)
+
+/**
+ * @route PUT /api/users/:id/unban
+ * @desc 解封用户
+ * @access Admin
+ */
+router.put('/:id/unban', authMiddleware, adminMiddleware, unbanUser)
 
 export default router

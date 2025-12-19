@@ -18,6 +18,13 @@ export interface PasswordUpdatePayload {
 }
 
 /**
+ * 封禁用户数据
+ */
+export interface BanUserPayload {
+  reason: string
+}
+
+/**
  * Users API - 用户管理相关接口
  */
 const usersApi = {
@@ -61,6 +68,20 @@ const usersApi = {
    */
   updatePassword(id: number, { oldPassword, newPassword }: PasswordUpdatePayload): Promise<ApiResponse<void>> {
     return request.put(`/users/${id}/password`, { oldPassword, newPassword })
+  },
+
+  /**
+   * 封禁用户
+   */
+  ban(id: number, reason: string): Promise<ApiResponse<void>> {
+    return request.put(`/users/${id}/ban`, { reason })
+  },
+
+  /**
+   * 解封用户
+   */
+  unban(id: number): Promise<ApiResponse<void>> {
+    return request.put(`/users/${id}/unban`)
   }
 }
 

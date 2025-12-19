@@ -69,14 +69,19 @@ const Photo = {
         p.id, p.user_id as userId, p.filename, p.original_name as originalName,
         p.file_path as filePath, p.file_size as fileSize, p.mime_type as mimeType,
         p.width, p.height, p.status, p.created_at as createdAt, p.updated_at as updatedAt,
-        u.display_name as uploaderName
+        u.display_name as uploaderName, u.is_banned as isBanned
       FROM photos p
       LEFT JOIN users u ON p.user_id = u.id
       WHERE p.id = ?
     `)
     
-    const photo = stmt.get(id) as (PhotoRow & { status: 'pending' | 'approved' | 'rejected' }) | undefined
+    const photo = stmt.get(id) as (PhotoRow & { status: 'pending' | 'approved' | 'rejected', isBanned: number }) | undefined
     if (!photo) return null
+    
+    // 检查图片上传者是否被封禁
+    if (photo.isBanned === 1) {
+      return null
+    }
     
     // 获取图片标签和点赞信息
     const likeCount = this.getLikeCount(id)
@@ -142,6 +147,9 @@ const Photo = {
         orderClause = 'ORDER BY RANDOM()'
         break
     }
+
+    // 添加封禁用户过滤（总是排除被封禁用户的图片）
+    whereClause += ' AND p.user_id NOT IN (SELECT id FROM users WHERE is_banned = 1)'
 
     // 获取总数
     const countStmt = db.prepare(`

@@ -60,6 +60,35 @@ const migrations: Migration[] = [
       // Add index for faster lookups
       db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email)')
     }
+  },
+  {
+    name: '003_add_ban_fields_to_users',
+    up: () => {
+      // Add ban-related fields to users table
+      const userColumns = db.pragma('table_info(users)') as Array<{ name: string }>
+
+      if (!userColumns.some(col => col.name === 'is_banned')) {
+        console.log('Adding is_banned column to users table...')
+        db.exec("ALTER TABLE users ADD COLUMN is_banned BOOLEAN DEFAULT 0")
+        db.exec("UPDATE users SET is_banned = 0")
+      }
+
+      if (!userColumns.some(col => col.name === 'banned_reason')) {
+        console.log('Adding banned_reason column to users table...')
+        db.exec("ALTER TABLE users ADD COLUMN banned_reason VARCHAR(500)")
+      }
+
+      if (!userColumns.some(col => col.name === 'banned_at')) {
+        console.log('Adding banned_at column to users table...')
+        db.exec("ALTER TABLE users ADD COLUMN banned_at DATETIME")
+      }
+
+      if (!userColumns.some(col => col.name === 'banned_by')) {
+        console.log('Adding banned_by column to users table...')
+        db.exec("ALTER TABLE users ADD COLUMN banned_by INTEGER")
+        db.exec("CREATE INDEX IF NOT EXISTS idx_users_is_banned ON users(is_banned)")
+      }
+    }
   }
 ]
 

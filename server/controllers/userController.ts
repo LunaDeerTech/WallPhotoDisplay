@@ -334,11 +334,187 @@ export async function updatePassword(req: AuthenticatedRequest, res: Response): 
   }
 }
 
+/**
+ * 封禁用户
+ * PUT /api/users/:id/ban
+ */
+export async function banUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Not authenticated'
+      })
+      return
+    }
+
+    // 只有管理员可以封禁用户
+    if (req.user.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      })
+      return
+    }
+
+    const { id } = req.params
+    const userId = parseInt(id)
+    const { reason } = req.body as { reason?: string }
+
+    // 验证封禁理由
+    if (!reason || reason.trim().length === 0) {
+      res.status(400).json({
+        success: false,
+        error: '封禁理由不能为空'
+      })
+      return
+    }
+
+    if (reason.length > 500) {
+      res.status(400).json({
+        success: false,
+        error: '封禁理由不能超过500字符'
+      })
+      return
+    }
+
+    // 不能封禁自己
+    if (req.user.id === userId) {
+      res.status(400).json({
+        success: false,
+        error: '不能封禁自己的账号'
+      })
+      return
+    }
+
+    // 检查用户是否存在
+    const existingUser = User.findById(userId)
+    if (!existingUser) {
+      res.status(404).json({
+        success: false,
+        error: '用户不存在'
+      })
+      return
+    }
+
+    // 检查用户是否已经被封禁
+    if (existingUser.isBanned) {
+      res.status(400).json({
+        success: false,
+        error: '用户已被封禁'
+      })
+      return
+    }
+
+    // 执行封禁
+    const success = User.ban(userId, reason.trim(), req.user.id)
+    
+    if (!success) {
+      res.status(500).json({
+        success: false,
+        error: '封禁失败'
+      })
+      return
+    }
+
+    res.json({
+      success: true,
+      message: '用户已封禁',
+      data: {
+        userId,
+        reason: reason.trim(),
+        bannedAt: new Date().toISOString(),
+        bannedBy: req.user.id
+      }
+    })
+  } catch (error) {
+    console.error('Ban user error:', error)
+    res.status(500).json({
+      success: false,
+      error: '封禁用户失败'
+    })
+  }
+}
+
+/**
+ * 解封用户
+ * PUT /api/users/:id/unban
+ */
+export async function unbanUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Not authenticated'
+      })
+      return
+    }
+
+    // 只有管理员可以解封用户
+    if (req.user.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      })
+      return
+    }
+
+    const { id } = req.params
+    const userId = parseInt(id)
+
+    // 检查用户是否存在
+    const existingUser = User.findById(userId)
+    if (!existingUser) {
+      res.status(404).json({
+        success: false,
+        error: '用户不存在'
+      })
+      return
+    }
+
+    // 检查用户是否被封禁
+    if (!existingUser.isBanned) {
+      res.status(400).json({
+        success: false,
+        error: '用户未被封禁'
+      })
+      return
+    }
+
+    // 执行解封
+    const success = User.unban(userId)
+    
+    if (!success) {
+      res.status(500).json({
+        success: false,
+        error: '解封失败'
+      })
+      return
+    }
+
+    res.json({
+      success: true,
+      message: '用户已解封',
+      data: {
+        userId
+      }
+    })
+  } catch (error) {
+    console.error('Unban user error:', error)
+    res.status(500).json({
+      success: false,
+      error: '解封用户失败'
+    })
+  }
+}
+
 export default {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
   deleteUser,
-  updatePassword
+  updatePassword,
+  banUser,
+  unbanUser
 }

@@ -6,6 +6,10 @@ export interface User {
   email?: string
   emailVerified: boolean
   role: 'admin' | 'user'
+  isBanned: boolean
+  bannedReason?: string
+  bannedAt?: string
+  bannedBy?: number
   createdAt: string
   updatedAt: string
 }

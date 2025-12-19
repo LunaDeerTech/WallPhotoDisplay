@@ -15,6 +15,10 @@ export interface UserEntity {
   email?: string
   email_verified: number // SQLite stores boolean as 0/1
   role: 'admin' | 'user'
+  is_banned: number // SQLite stores boolean as 0/1
+  banned_reason?: string
+  banned_at?: string
+  banned_by?: number
   created_at: string
   updated_at: string
 }
@@ -68,6 +72,10 @@ export interface UserPublic {
   email?: string
   emailVerified: boolean
   role: 'admin' | 'user'
+  isBanned: boolean
+  bannedReason?: string
+  bannedAt?: string
+  bannedBy?: number
   createdAt: string
   updatedAt: string
 }
@@ -77,6 +85,7 @@ export interface UserPublic {
  */
 export interface UserWithPassword extends UserPublic {
   password: string
+  // 继承UserPublic的所有字段，包括封禁相关字段
 }
 
 /**

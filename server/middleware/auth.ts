@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import type { AuthenticatedRequest, JwtPayload } from '../types/index.js'
+import { User } from '../models/index.js'
 
 dotenv.config()
 
@@ -58,6 +59,16 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
     res.status(401).json({
       success: false,
       error: 'Invalid or expired token'
+    })
+    return
+  }
+
+  // 检查用户是否被封禁
+  const isBanned = User.isBanned(decoded.id)
+  if (isBanned) {
+    res.status(403).json({
+      success: false,
+      error: '您的账号已被封禁，无法进行此操作'
     })
     return
   }
