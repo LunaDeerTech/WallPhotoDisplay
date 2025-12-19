@@ -182,7 +182,7 @@ function calculateLayout(): void {
     // Add footer height estimate if info is shown
     // This is an approximation since tag height varies
     if (props.showInfo) {
-      itemHeight += 70 
+      itemHeight += 56 
     }
 
     // Store position
