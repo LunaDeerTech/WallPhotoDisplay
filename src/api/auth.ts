@@ -48,6 +48,14 @@ const authApi = {
    */
   verifyEmail(email: string, code: string): Promise<ApiResponse<void>> {
     return request.post('/auth/verify-email', { email, code })
+  },
+
+  /**
+   * 密码重置
+   * @param identifier - 用户名或邮箱
+   */
+  resetPassword(identifier: string): Promise<ApiResponse<void>> {
+    return request.post('/auth/reset-password', { identifier })
   }
 }
 

@@ -69,45 +69,64 @@
 
     <!-- @vue-ignore -->
     <template #footer>
-      <div class="dialog-actions">
-        <button
-          v-if="allowRegistration"
-          type="button"
-          class="btn btn-secondary"
-          @click="handleRegister"
-          :disabled="loading"
-        >
-          注册
-        </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          @click="handleClose"
-          :disabled="loading"
-        >
-          取消
-        </button>
-        <button
-          type="submit"
-          class="btn btn-primary"
-          @click="handleSubmit"
-          :disabled="loading || !isFormValid"
-        >
-          <span v-if="loading" class="btn-loading">
-            <svg class="spinner" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-          </span>
-          <span>{{ loading ? '登录中...' : '登录' }}</span>
-        </button>
+      <div class="dialog-footer">
+        <!-- 左侧辅助操作区 -->
+        <div class="footer-left">
+          <button
+            v-if="allowRegistration"
+            type="button"
+            class="link-button"
+            @click="handleRegister"
+            :disabled="loading"
+          >
+            注册新账号
+          </button>
+          <button
+            type="button"
+            class="link-button"
+            @click="handleForgotPassword"
+            :disabled="loading"
+          >
+            忘记密码？
+          </button>
+        </div>
+
+        <!-- 右侧主操作区 -->
+        <div class="footer-right">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="handleClose"
+            :disabled="loading"
+          >
+            取消
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            @click="handleSubmit"
+            :disabled="loading || !isFormValid"
+          >
+            <span v-if="loading" class="btn-loading">
+              <svg class="spinner" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span>{{ loading ? '登录中...' : '登录' }}</span>
+          </button>
+        </div>
       </div>
     </template>
   </Modal>
+
+  <!-- 密码重置对话框 -->
+  <ResetPasswordDialog v-model="showResetPassword" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
+import ResetPasswordDialog from './ResetPasswordDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useConfigStore } from '@/stores/config'
 
@@ -147,6 +166,7 @@ const form = ref<LoginForm>({
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
+const showResetPassword = ref(false)
 
 // Computed
 const allowRegistration = computed(() => {
@@ -181,6 +201,13 @@ function handleRegister(): void {
   }
 }
 
+// Handle forgot password
+function handleForgotPassword(): void {
+  if (!loading.value) {
+    showResetPassword.value = true
+  }
+}
+
 // Handle submit
 async function handleSubmit(): Promise<void> {
   if (!isFormValid.value || loading.value) return
@@ -210,12 +237,18 @@ async function handleSubmit(): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  padding: var(--spacing-xs) 0;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
 }
 
 .form-label {
@@ -226,13 +259,14 @@ async function handleSubmit(): Promise<void> {
 
 .form-input {
   width: 100%;
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   font-size: var(--font-size-md);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
   transition: all var(--transition-fast);
+  font-weight: var(--font-weight-normal);
 }
 
 .form-input:focus {
@@ -240,15 +274,18 @@ async function handleSubmit(): Promise<void> {
   border-color: var(--color-accent);
   background-color: var(--color-bg-primary);
   box-shadow: 0 0 0 3px var(--color-accent-light);
+  transform: translateY(-1px);
 }
 
 .form-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .form-input::placeholder {
   color: var(--color-text-placeholder);
+  font-weight: var(--font-weight-light);
 }
 
 .password-input-wrapper {
@@ -261,24 +298,31 @@ async function handleSubmit(): Promise<void> {
 
 .password-toggle {
   position: absolute;
-  right: var(--spacing-md);
+  right: var(--spacing-sm);
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   color: var(--color-text-secondary);
-  background: none;
+  background: transparent;
   border: none;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  padding: 0;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .password-toggle:hover {
-  color: var(--color-text-primary);
+  color: var(--color-accent);
+  background-color: rgba(0, 122, 255, 0.1);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.password-toggle:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
 .password-toggle svg {
@@ -295,6 +339,7 @@ async function handleSubmit(): Promise<void> {
   border-radius: var(--radius-md);
   color: var(--color-error);
   font-size: var(--font-size-sm);
+  margin-top: var(--spacing-sm);
 }
 
 .form-error svg {
@@ -303,6 +348,67 @@ async function handleSubmit(): Promise<void> {
   flex-shrink: 0;
 }
 
+/* Footer Layout */
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: flex-start;
+}
+
+.footer-right {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+/* Link buttons for footer */
+.link-button {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
+  position: relative;
+}
+
+.link-button::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--color-accent);
+  transition: width var(--transition-fast);
+}
+
+.link-button:hover:not(:disabled) {
+  color: var(--color-accent-hover);
+}
+
+.link-button:hover:not(:disabled)::after {
+  width: 100%;
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Action buttons */
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -316,39 +422,70 @@ async function handleSubmit(): Promise<void> {
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
   transition: all var(--transition-fast);
+  min-width: 80px;
+  white-space: nowrap;
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .btn-primary {
-  background-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
   color: white;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-accent-hover);
-  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.35);
 }
 
 .btn-primary:active:not(:disabled) {
+  transform: translateY(0);
   background-color: var(--color-accent-active);
 }
 
 .btn-secondary {
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
+  border: 2px solid var(--color-border);
+  font-weight: var(--font-weight-medium);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--color-bg-tertiary);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-loading .spinner {
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+.btn-loading .spinner circle {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 45;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-loading .spinner {
@@ -377,5 +514,35 @@ async function handleSubmit(): Promise<void> {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .dialog-footer {
+    flex-direction: column-reverse;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+  
+  .footer-left {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
+  
+  .footer-right {
+    justify-content: stretch;
+    width: 100%;
+  }
+  
+  .footer-right .btn {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .link-button {
+    font-size: var(--font-size-xs);
+  }
 }
 </style>

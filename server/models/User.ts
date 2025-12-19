@@ -78,6 +78,21 @@ const User = {
   },
 
   /**
+   * 根据邮箱查找用户
+   */
+  findByEmail(email: string): UserPublic[] {
+    const stmt = db.prepare(`
+      SELECT id, username, display_name as displayName, email, email_verified as emailVerified, role, created_at as createdAt, updated_at as updatedAt
+      FROM users WHERE email = ?
+    `)
+    const rows = stmt.all(email) as UserRow[]
+    return rows.map(row => ({
+      ...row,
+      emailVerified: Boolean(row.emailVerified)
+    }))
+  },
+
+  /**
    * 获取所有用户
    */
   findAll(): UserPublic[] {

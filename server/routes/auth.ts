@@ -1,6 +1,6 @@
 import express from 'express'
 const Router = express.Router
-import { register, login, logout, getCurrentUser, sendVerificationCode, verifyEmail } from '../controllers/authController.js'
+import { register, login, logout, getCurrentUser, sendVerificationCode, verifyEmail, resetPassword } from '../controllers/authController.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
@@ -46,5 +46,12 @@ router.post('/send-verification-code', authMiddleware, sendVerificationCode)
  * @access Protected
  */
 router.post('/verify-email', authMiddleware, verifyEmail)
+
+/**
+ * @route POST /api/auth/reset-password
+ * @desc 密码重置
+ * @access Public
+ */
+router.post('/reset-password', resetPassword)
 
 export default router

@@ -329,12 +329,123 @@ export async function verifyEmail(req: AuthenticatedRequest, res: Response): Pro
   }
 }
 
+/**
+ * 生成随机密码
+ */
+function generateRandomPassword(length: number = 12): string {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+  const numbers = '0123456789'
+  const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+  
+  const allChars = uppercase + lowercase + numbers + symbols
+  let password = ''
+  
+  // 确保包含每种类型的字符
+  password += uppercase[Math.floor(Math.random() * uppercase.length)]
+  password += lowercase[Math.floor(Math.random() * lowercase.length)]
+  password += numbers[Math.floor(Math.random() * numbers.length)]
+  password += symbols[Math.floor(Math.random() * symbols.length)]
+  
+  // 填充剩余字符
+  for (let i = password.length; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)]
+  }
+  
+  // 打乱密码顺序
+  return password.split('').sort(() => Math.random() - 0.5).join('')
+}
+
+/**
+ * 密码重置
+ * POST /api/auth/reset-password
+ */
+export async function resetPassword(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { identifier } = req.body
+    
+    if (!identifier) {
+      res.status(400).json({ success: false, error: 'Email or username is required' })
+      return
+    }
+
+    // 查找用户（支持邮箱或用户名）
+    let user = null
+    if (identifier.includes('@')) {
+      // 如果包含@，认为是邮箱
+      const users = User.findByEmail(identifier)
+      if (users.length > 0) {
+        user = users[0]
+      }
+    } else {
+      // 否则是用户名
+      user = User.findByUsername(identifier)
+    }
+
+    if (!user) {
+      res.status(404).json({ success: false, error: 'User not found' })
+      return
+    }
+
+    // 检查用户是否有邮箱
+    if (!user.email) {
+      res.status(400).json({ success: false, error: 'User has no email registered' })
+      return
+    }
+
+    // 生成随机密码
+    const newPassword = generateRandomPassword(12)
+
+    // 更新用户密码
+    const success = User.updatePassword(user.id, newPassword)
+
+    if (!success) {
+      res.status(500).json({ success: false, error: 'Failed to reset password' })
+      return
+    }
+
+    // 发送邮件
+    const config = await loadConfig()
+    if (!config.smtpHost) {
+      res.status(500).json({ success: false, error: 'SMTP configuration missing' })
+      return
+    }
+
+    await sendEmail({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      user: config.smtpUser,
+      pass: config.smtpPass,
+      from: config.smtpFrom,
+      secure: config.smtpSecure
+    }, user.email, '密码重置通知', `
+      <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; margin-top: 0;">密码重置完成</h2>
+          <p style="color: #666; line-height: 1.6;">您的密码已成功重置。以下是您的新密码：</p>
+          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 4px; text-align: center; margin: 20px 0;">
+            <code style="font-size: 18px; font-weight: bold; color: #333;">${newPassword}</code>
+          </div>
+          <p style="color: #666; line-height: 1.6;">请使用此密码登录系统，并立即修改密码以确保账户安全。</p>
+          <p style="color: #999; font-size: 12px; margin-top: 20px;">此邮件由系统自动发送，请勿回复。</p>
+        </div>
+      </div>
+    `)
+
+    res.json({ success: true, message: 'Password reset successful. Check your email for the new password.' })
+  } catch (error) {
+    console.error('Reset password error:', error)
+    res.status(500).json({ success: false, error: 'Failed to reset password' })
+  }
+}
+
 export default {
   register,
   login,
   logout,
   getCurrentUser,
   sendVerificationCode,
-  verifyEmail
+  verifyEmail,
+  resetPassword
 
 }
