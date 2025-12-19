@@ -76,6 +76,19 @@ export function initTables(): void {
     )
   `)
 
+  // 创建 likes 表（点赞记录）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS likes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      photo_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(photo_id, user_id)
+    )
+  `)
+
   // 创建索引以提高查询性能
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_photos_user_id ON photos(user_id);
@@ -83,6 +96,9 @@ export function initTables(): void {
     CREATE INDEX IF NOT EXISTS idx_photo_tags_photo_id ON photo_tags(photo_id);
     CREATE INDEX IF NOT EXISTS idx_photo_tags_tag_id ON photo_tags(tag_id);
     CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+    CREATE INDEX IF NOT EXISTS idx_likes_photo_id ON likes(photo_id);
+    CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);
+    CREATE INDEX IF NOT EXISTS idx_likes_photo_user ON likes(photo_id, user_id);
   `)
 }
 

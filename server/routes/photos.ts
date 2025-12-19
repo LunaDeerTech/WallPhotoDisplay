@@ -11,7 +11,9 @@ import {
   batchUpdateTags,
   getPendingPhotos,
   reviewPhoto,
-  batchReviewPhotos
+  batchReviewPhotos,
+  toggleLike,
+  getLikeStatus
 } from '../controllers/photoController.js'
 import { authMiddleware, optionalAuthMiddleware, adminMiddleware } from '../middleware/auth.js'
 import { uploadMultiple, handleUploadError } from '../middleware/upload.js'
@@ -94,5 +96,19 @@ router.put('/:id/tags', authMiddleware, updatePhotoTags)
  * @access Protected (Owner or Admin)
  */
 router.delete('/:id', authMiddleware, deletePhoto)
+
+/**
+ * @route POST /api/photos/:id/like
+ * @desc 点赞/取消点赞图片
+ * @access Protected
+ */
+router.post('/:id/like', authMiddleware, toggleLike)
+
+/**
+ * @route GET /api/photos/:id/like-status
+ * @desc 获取图片点赞状态
+ * @access Protected
+ */
+router.get('/:id/like-status', authMiddleware, getLikeStatus)
 
 export default router

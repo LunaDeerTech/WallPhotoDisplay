@@ -29,6 +29,8 @@ interface PhotoWithTags extends PhotoRow {
   tags: TagRow[]
   url?: string
   thumbnailUrl?: string
+  likeCount?: number
+  isLiked?: boolean
 }
 
 interface TagIdRow {
@@ -61,7 +63,7 @@ const Photo = {
   /**
    * 根据 ID 查找图片
    */
-  findById(id: number): PhotoWithTags | null {
+  findById(id: number, currentUserId?: number): PhotoWithTags | null {
     const stmt = db.prepare(`
       SELECT 
         p.id, p.user_id as userId, p.filename, p.original_name as originalName,
@@ -76,10 +78,15 @@ const Photo = {
     const photo = stmt.get(id) as (PhotoRow & { status: 'pending' | 'approved' | 'rejected' }) | undefined
     if (!photo) return null
     
-    // 获取图片标签
+    // 获取图片标签和点赞信息
+    const likeCount = this.getLikeCount(id)
+    const isLiked = currentUserId ? this.isLikedByUser(id, currentUserId) : false
+    
     const photoWithTags: PhotoWithTags & { status: 'pending' | 'approved' | 'rejected' } = {
       ...photo,
-      tags: this.getTags(id)
+      tags: this.getTags(id),
+      likeCount,
+      isLiked
     }
     return photoWithTags
   },
@@ -87,7 +94,7 @@ const Photo = {
   /**
    * 获取图片列表（支持分页、筛选、排序）
    */
-  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds, status }: PhotoQueryParams = {}): PhotoPaginatedResult {
+  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds, status, currentUserId }: PhotoQueryParams & { currentUserId?: number } = {}): PhotoPaginatedResult {
     let whereClause = 'WHERE 1=1'
     const params: (string | number)[] = []
 
@@ -163,13 +170,20 @@ const Photo = {
     
     const photoRows = stmt.all(...params, limit, offset) as PhotoRow[]
     
-    // 获取每张图片的标签
-    const photos: PhotoWithTags[] = photoRows.map(photo => ({
-      ...photo,
-      tags: this.getTags(photo.id),
-      url: `/uploads/${photo.filename}`,
-      thumbnailUrl: `/uploads/thumb_${photo.filename}`
-    }))
+    // 获取每张图片的标签和点赞信息
+    const photos: PhotoWithTags[] = photoRows.map(photo => {
+      const likeCount = this.getLikeCount(photo.id)
+      const isLiked = currentUserId ? this.isLikedByUser(photo.id, currentUserId) : false
+      
+      return {
+        ...photo,
+        tags: this.getTags(photo.id),
+        url: `/uploads/${photo.filename}`,
+        thumbnailUrl: `/uploads/thumb_${photo.filename}`,
+        likeCount,
+        isLiked
+      }
+    })
 
     const pagination: PaginationInfo = {
       page,
@@ -187,7 +201,7 @@ const Photo = {
   /**
    * 获取用户的所有图片
    */
-  findByUserId(userId: number, options: Omit<PhotoQueryParams, 'userId'> = {}): PhotoPaginatedResult {
+  findByUserId(userId: number, options: Omit<PhotoQueryParams, 'userId'> & { currentUserId?: number } = {}): PhotoPaginatedResult {
     return this.findAll({ ...options, userId })
   },
 
@@ -333,6 +347,55 @@ const Photo = {
     
     const stmt = db.prepare(sql)
     return (stmt.get(...params) as CountRow).count
+  },
+
+  /**
+   * 获取图片点赞数
+   */
+  getLikeCount(photoId: number): number {
+    const stmt = db.prepare('SELECT COUNT(*) as count FROM likes WHERE photo_id = ?')
+    const result = stmt.get(photoId) as CountRow
+    return result.count
+  },
+
+  /**
+   * 检查用户是否点赞了图片
+   */
+  isLikedByUser(photoId: number, userId: number): boolean {
+    const stmt = db.prepare('SELECT 1 FROM likes WHERE photo_id = ? AND user_id = ?')
+    return !!stmt.get(photoId, userId)
+  },
+
+  /**
+   * 点赞图片
+   */
+  likePhoto(photoId: number, userId: number): boolean {
+    try {
+      const stmt = db.prepare('INSERT OR IGNORE INTO likes (photo_id, user_id) VALUES (?, ?)')
+      const result = stmt.run(photoId, userId)
+      return result.changes > 0
+    } catch (error) {
+      // 如果是唯一约束冲突，说明已经点赞过
+      return false
+    }
+  },
+
+  /**
+   * 取消点赞
+   */
+  unlikePhoto(photoId: number, userId: number): boolean {
+    const stmt = db.prepare('DELETE FROM likes WHERE photo_id = ? AND user_id = ?')
+    const result = stmt.run(photoId, userId)
+    return result.changes > 0
+  },
+
+  /**
+   * 获取图片的点赞用户ID列表
+   */
+  getLikedUserIds(photoId: number): number[] {
+    const stmt = db.prepare('SELECT user_id FROM likes WHERE photo_id = ?')
+    const rows = stmt.all(photoId) as Array<{ user_id: number }>
+    return rows.map(row => row.user_id)
   }
 }
 

@@ -288,6 +288,55 @@ export const usePhotosStore = defineStore('photos', () => {
   }
 
   /**
+   * 点赞/取消点赞图片
+   */
+  async function toggleLike(photoId: number): Promise<ActionResult<{ isLiked: boolean; likeCount: number }>> {
+    try {
+      const response = await photosApi.toggleLike(photoId)
+      
+      if (response.success && response.data) {
+        // 更新本地状态
+        const index = photos.value.findIndex(p => p.id === photoId)
+        if (index !== -1) {
+          photos.value[index] = {
+            ...photos.value[index],
+            isLiked: response.data.isLiked,
+            likeCount: response.data.likeCount
+          }
+        }
+        
+        return {
+          success: true,
+          data: {
+            isLiked: response.data.isLiked,
+            likeCount: response.data.likeCount
+          }
+        }
+      } else {
+        return { success: false, error: response.error }
+      }
+    } catch (error: unknown) {
+      console.error('Toggle like error:', error)
+      const err = error as { error?: string }
+      return { success: false, error: err.error ?? 'Failed to toggle like' }
+    }
+  }
+
+  /**
+   * 更新指定图片的点赞状态（用于从其他组件更新状态）
+   */
+  function updatePhotoLikeStatus(photoId: number, isLiked: boolean, likeCount: number): void {
+    const index = photos.value.findIndex(p => p.id === photoId)
+    if (index !== -1) {
+      photos.value[index] = {
+        ...photos.value[index],
+        isLiked,
+        likeCount
+      }
+    }
+  }
+
+  /**
    * 重置状态
    */
   function reset(): void {
@@ -333,6 +382,8 @@ export const usePhotosStore = defineStore('photos', () => {
     deletePhoto,
     batchUpdateTags,
     batchDelete,
+    toggleLike,
+    updatePhotoLikeStatus,
     reset,
     setPageLimit
   }

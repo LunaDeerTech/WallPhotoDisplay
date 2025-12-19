@@ -27,6 +27,7 @@
           @photo-contextmenu="handlePhotoContextMenu"
           @photo-select="handlePhotoSelect"
           @photo-view="handlePhotoView"
+          @photo-like="handlePhotoLike"
         />
 
         <!-- Photo Context Menu -->
@@ -51,6 +52,7 @@
           :initial-index="viewerInitialIndex"
           @close="viewerVisible = false"
           @change="handleViewerChange"
+          @like="handlePhotoLike"
         />
       </template>
     </div>
@@ -136,6 +138,7 @@ const multiSelect = useMultiSelect<Photo>({
 // Photo viewer state
 const viewerVisible = ref(false)
 const viewerInitialIndex = ref(0)
+const pendingLikePhotoId = ref<number | null>(null)
 
 // Update multi-select items when photos change
 watch(() => photosStore.photos, (photos) => {
@@ -154,6 +157,15 @@ watch(
 // Load initial photos
 onMounted(() => {
   fetchPhotos()
+})
+
+// Watch for login status changes to process pending likes
+watch(() => authStore.isLoggedIn, (isLoggedIn) => {
+  if (isLoggedIn && pendingLikePhotoId.value) {
+    // 用户已登录，执行之前pending的点赞操作
+    photosStore.toggleLike(pendingLikePhotoId.value)
+    pendingLikePhotoId.value = null
+  }
 })
 
 // Fetch photos with current filters
@@ -189,6 +201,19 @@ function handlePhotoView(photo: Photo): void {
   const index = photosStore.photos.findIndex(p => p.id === photo.id)
   viewerInitialIndex.value = index >= 0 ? index : 0
   viewerVisible.value = true
+}
+
+function handlePhotoLike(photo: Photo): void {
+  // 检查用户是否登录
+  if (!authStore.isLoggedIn) {
+    // 未登录，保存点赞请求，弹出登录对话框
+    pendingLikePhotoId.value = photo.id
+    emit('login')
+    return
+  }
+  
+  // 已登录，执行点赞操作
+  photosStore.toggleLike(photo.id)
 }
 
 function handleViewerChange(_index: number, _photo: Photo): void {
@@ -237,10 +262,20 @@ function showLoginDialog(): void {
   emit('login')
 }
 
+// Handle login success - process pending like if any
+function handleLoginSuccess(): void {
+  if (pendingLikePhotoId.value) {
+    // Process pending like after login
+    photosStore.toggleLike(pendingLikePhotoId.value)
+    pendingLikePhotoId.value = null
+  }
+}
+
 // Expose methods for parent component
 defineExpose({
   refresh: fetchPhotos,
-  exitSelectionMode: () => multiSelect.exitSelectionMode()
+  exitSelectionMode: () => multiSelect.exitSelectionMode(),
+  handleLoginSuccess
 })
 </script>
 

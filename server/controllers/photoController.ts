@@ -133,7 +133,8 @@ export async function getPhotos(req: AuthenticatedRequest, res: Response): Promi
       sort,
       userId: userId ? parseInt(userId) : undefined,
       userIds: userIdArray.length > 0 ? userIdArray : undefined,
-      status: 'approved'
+      status: 'approved',
+      currentUserId: req.user?.id
     })
     
     res.json({
@@ -180,7 +181,8 @@ export async function getMyPhotos(req: AuthenticatedRequest, res: Response): Pro
       page: parseInt(page),
       limit: parseInt(limit),
       tags: tagArray,
-      sort
+      sort,
+      currentUserId: req.user.id
     })
     
     res.json({
@@ -203,7 +205,7 @@ export async function getMyPhotos(req: AuthenticatedRequest, res: Response): Pro
 export async function getPhotoById(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params
-    const photo = Photo.findById(parseInt(id))
+    const photo = Photo.findById(parseInt(id), req.user?.id)
     
     if (!photo) {
       res.status(404).json({
@@ -700,6 +702,119 @@ export async function batchReviewPhotos(req: AuthenticatedRequest, res: Response
   }
 }
 
+/**
+ * 点赞/取消点赞图片
+ * POST /api/photos/:id/like
+ */
+export async function toggleLike(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Not authenticated'
+      })
+      return
+    }
+
+    const { id } = req.params
+    const photoId = parseInt(id)
+    
+    // 检查图片是否存在
+    const photo = Photo.findById(photoId)
+    if (!photo) {
+      res.status(404).json({
+        success: false,
+        error: 'Photo not found'
+      })
+      return
+    }
+
+    // 检查是否已点赞
+    const isLiked = Photo.isLikedByUser(photoId, req.user.id)
+    
+    if (isLiked) {
+      // 取消点赞
+      Photo.unlikePhoto(photoId, req.user.id)
+      const likeCount = Photo.getLikeCount(photoId)
+      
+      res.json({
+        success: true,
+        data: {
+          id: photoId,
+          isLiked: false,
+          likeCount
+        }
+      })
+    } else {
+      // 点赞
+      Photo.likePhoto(photoId, req.user.id)
+      const likeCount = Photo.getLikeCount(photoId)
+      
+      res.json({
+        success: true,
+        data: {
+          id: photoId,
+          isLiked: true,
+          likeCount
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Toggle like error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to toggle like'
+    })
+  }
+}
+
+/**
+ * 获取图片点赞状态
+ * GET /api/photos/:id/like-status
+ */
+export async function getLikeStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Not authenticated'
+      })
+      return
+    }
+
+    const { id } = req.params
+    const photoId = parseInt(id)
+    
+    // 检查图片是否存在
+    const photo = Photo.findById(photoId)
+    if (!photo) {
+      res.status(404).json({
+        success: false,
+        error: 'Photo not found'
+      })
+      return
+    }
+
+    const isLiked = Photo.isLikedByUser(photoId, req.user.id)
+    const likeCount = Photo.getLikeCount(photoId)
+    
+    res.json({
+      success: true,
+      data: {
+        id: photoId,
+        isLiked,
+        likeCount
+      }
+    })
+  } catch (error) {
+    console.error('Get like status error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get like status'
+    })
+  }
+}
+
 export default {
   getPhotos,
   getMyPhotos,
@@ -708,5 +823,7 @@ export default {
   updatePhotoTags,
   deletePhoto,
   batchDeletePhotos,
-  batchUpdateTags
+  batchUpdateTags,
+  toggleLike,
+  getLikeStatus
 }

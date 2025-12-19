@@ -211,6 +211,10 @@ const handleOpenDialog = (dialogName: DialogName): void => {
 const handleLoginSuccess = (): void => {
   // Refresh photos to show user-specific content
   photosStore.fetchPhotos()
+  // Notify MainContent to process any pending likes
+  if (mainContentRef.value?.handleLoginSuccess) {
+    mainContentRef.value.handleLoginSuccess()
+  }
 }
 
 // Register handler

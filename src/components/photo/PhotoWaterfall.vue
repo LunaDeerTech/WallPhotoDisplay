@@ -50,6 +50,7 @@
           @select="handlePhotoSelect"
           @view="handlePhotoView"
           @image-load="handleImageLoad(photo)"
+          @like="handlePhotoLike"
         />
       </div>
     </div>
@@ -116,6 +117,7 @@ const emit = defineEmits<{
   'photo-contextmenu': [event: MouseEvent, photo: Photo]
   'photo-select': [photo: Photo, selected: boolean]
   'photo-view': [photo: Photo]
+  'photo-like': [photo: Photo]
 }>()
 
 // Refs
@@ -252,6 +254,10 @@ function handlePhotoSelect(photo: Photo, selected: boolean): void {
 
 function handlePhotoView(photo: Photo): void {
   emit('photo-view', photo)
+}
+
+function handlePhotoLike(photo: Photo): void {
+  emit('photo-like', photo)
 }
 
 // Intersection Observer for infinite scroll

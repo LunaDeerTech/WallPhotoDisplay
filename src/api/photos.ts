@@ -169,6 +169,20 @@ const photosApi = {
    */
   batchReviewPhotos(ids: number[], action: 'approve' | 'reject'): Promise<ApiResponse<{ count: number }>> {
     return request.post('/batch/review', { ids, action })
+  },
+
+  /**
+   * 点赞/取消点赞图片
+   */
+  toggleLike(photoId: number): Promise<ApiResponse<{ id: number; isLiked: boolean; likeCount: number }>> {
+    return request.post(`/photos/${photoId}/like`)
+  },
+
+  /**
+   * 获取图片点赞状态
+   */
+  getLikeStatus(photoId: number): Promise<ApiResponse<{ id: number; isLiked: boolean; likeCount: number }>> {
+    return request.get(`/photos/${photoId}/like-status`)
   }
 }
 

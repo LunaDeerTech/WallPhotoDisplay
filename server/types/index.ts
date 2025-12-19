@@ -98,6 +98,8 @@ export interface PhotoResponse {
   tags: TagResponse[]
   url?: string
   thumbnailUrl?: string
+  likeCount?: number
+  isLiked?: boolean
 }
 
 /**
