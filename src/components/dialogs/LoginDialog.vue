@@ -53,7 +53,6 @@ const isOpen = computed({
 })
 
 const showResetPassword = ref(false)
-const loginFormRef = ref<InstanceType<typeof LoginForm> | null>(null)
 
 // Computed
 const allowRegistration = computed(() => {
