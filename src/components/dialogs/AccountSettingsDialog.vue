@@ -10,6 +10,9 @@
       v-model="showRegister"
       @success="handleLoginSuccess"
     />
+    <ResetPasswordDialog
+      v-model="showResetPassword"
+    />
     <div class="settings-container">
       <!-- Sidebar (Left) -->
       <div class="settings-sidebar" :class="{ 'hidden-mobile': activeSection !== null }">
@@ -66,7 +69,9 @@
             v-if="activeComponent"
             @success="handleLoginSuccess"
             @register="handleRegister"
+            @forgot-password="handleForgotPassword"
             :showHeader="true"
+            :showForgotPassword="activeSection === 'profile' && !isLoggedIn"
           />
           <div v-else class="empty-state">
             <p>请选择设置项</p>
@@ -83,8 +88,9 @@ import Modal from '../common/Modal.vue'
 import BrowseSettings from '../settings/BrowseSettings.vue'
 import ProfileSettings from '../settings/ProfileSettings.vue'
 import PhotoManager from '../settings/PhotoManager.vue'
-import LoginForm from '../auth/LoginForm.vue'
+import LoginForm from '../common/LoginForm.vue'
 import RegisterDialog from './RegisterDialog.vue'
+import ResetPasswordDialog from './ResetPasswordDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 
 // Icons
@@ -126,6 +132,7 @@ const isOpen = computed({
 })
 
 const showRegister = ref(false)
+const showResetPassword = ref(false)
 const activeSection = ref<string | null>(null)
 
 // Menu Items
@@ -199,6 +206,10 @@ function handleLoginSuccess() {
 
 function handleRegister() {
   showRegister.value = true
+}
+
+function handleForgotPassword() {
+  showResetPassword.value = true
 }
 
 function handleLogout() {
