@@ -208,10 +208,6 @@ const emit = defineEmits<{
   'like': [photo: Photo]
 }>()
 
-// Refs
-const contentRef = ref<HTMLElement | null>(null)
-const imageRef = ref<HTMLImageElement | null>(null)
-
 // State
 const currentIndex = ref(props.initialIndex)
 const isLoading = ref(true)

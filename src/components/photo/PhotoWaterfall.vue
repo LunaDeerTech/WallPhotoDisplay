@@ -119,7 +119,6 @@ const emit = defineEmits<{
 }>()
 
 // Refs
-const containerRef = ref<HTMLElement | null>(null)
 const gridRef = ref<HTMLElement | null>(null)
 const loadMoreTrigger = ref<HTMLElement | null>(null)
 
