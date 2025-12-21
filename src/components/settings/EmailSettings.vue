@@ -1,83 +1,69 @@
 <template>
-  <div class="site-settings">
-    <h3 class="section-title">系统设置</h3>
+  <div class="email-settings">
+    <h3 class="section-title">邮件设置</h3>
 
-    
-    
     <form @submit.prevent="handleSubmit" class="settings-form">
-
-      <h4 class="sub-section-title">网站信息</h4>
+      <h4 class="sub-section-title">SMTP 服务器配置</h4>
 
       <div class="form-group">
-        <label>网站名称</label>
+        <label>SMTP 服务器地址</label>
         <input 
-          v-model="form.siteName" 
+          v-model="form.smtpHost" 
           type="text" 
           class="form-input" 
-          placeholder="Wall Photo Display"
-          required
+          placeholder="smtp.example.com"
         />
-        <span class="help-text">显示在浏览器标签页标题</span>
       </div>
 
       <div class="form-group">
-        <label>网站介绍</label>
-        <textarea 
-          v-model="form.siteDescription" 
-          class="form-input" 
-          rows="3"
-          placeholder="A multi-user photo wall application"
-        ></textarea>
-      </div>
-
-      <h4 class="sub-section-title">菜单栏设置</h4>
-
-      <div class="preview-section">
-        <label>预览</label>
-        <div class="preview-box">
-          <div class="logo-preview">
-            <div class="logo-icon-wrapper" v-if="form.menuIconUrl">
-              <img :src="form.menuIconUrl" alt="Logo" />
-            </div>
-            <span class="logo-text">{{ form.menuTitle }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>菜单栏标题</label>
+        <label>SMTP 端口</label>
         <input 
-          v-model="form.menuTitle" 
+          v-model.number="form.smtpPort" 
+          type="number" 
+          class="form-input" 
+          placeholder="465"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>SMTP 用户名</label>
+        <input 
+          v-model="form.smtpUser" 
           type="text" 
           class="form-input" 
-          placeholder="照片墙"
-          required
+          placeholder="user@example.com"
         />
-        <span class="help-text">显示在左侧菜单栏顶部</span>
       </div>
 
       <div class="form-group">
-        <label>菜单栏图标 (图片URL)</label>
+        <label>SMTP 密码</label>
         <input 
-          v-model="form.menuIconUrl" 
-          type="text"
+          v-model="form.smtpPass" 
+          type="password" 
           class="form-input" 
-          placeholder="https://example.com/logo.png"
+          placeholder="********"
         />
-        <span class="help-text">请输入图片链接，留空则仅显示标题</span>
       </div>
 
-      <h4 class="sub-section-title">访问控制</h4>
+      <div class="form-group">
+        <label>发件人邮箱</label>
+        <input 
+          v-model="form.smtpFrom" 
+          type="email" 
+          class="form-input" 
+          placeholder="noreply@example.com"
+        />
+      </div>
 
       <div class="form-group">
         <div class="setting-row">
           <div class="setting-info">
-            <label class="setting-label">强制登录</label>
-            <span class="help-text">开启后，未登录用户无法查看照片墙，必须登录才能访问</span>
+            <label class="setting-label">使用安全连接 (SSL/TLS)</label>
+            <span class="help-text">通常端口 465 需要开启，587 不需要</span>
           </div>
           <label class="switch">
             <input 
-              v-model="form.forceLogin" 
+              v-model="form.smtpSecure" 
               type="checkbox" 
             />
             <span class="slider"></span>
@@ -85,36 +71,27 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <div class="setting-row">
-          <div class="setting-info">
-            <label class="setting-label">上传审核</label>
-            <span class="help-text">开启后，普通用户上传的照片需要管理员审核通过后才能显示</span>
-          </div>
-          <label class="switch">
-            <input 
-              v-model="form.uploadReview" 
-              type="checkbox" 
-            />
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
+      <h4 class="sub-section-title">邮件测试</h4>
 
       <div class="form-group">
-        <div class="setting-row">
-          <div class="setting-info">
-            <label class="setting-label">开放注册</label>
-            <span class="help-text">开启后，允许新用户注册账号</span>
-          </div>
-          <label class="switch">
-            <input 
-              v-model="form.allowRegistration" 
-              type="checkbox" 
-            />
-            <span class="slider"></span>
-          </label>
+        <label>测试邮件接收邮箱</label>
+        <div class="test-email-row">
+          <input 
+            v-model="testEmailRecipient" 
+            type="email" 
+            class="form-input" 
+            placeholder="test@example.com"
+          />
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            @click="handleTestEmail" 
+            :disabled="testingEmail"
+          >
+            {{ testingEmail ? '发送中...' : '发送测试邮件' }}
+          </button>
         </div>
+        <span class="help-text">如果不填写，将发送到发件人邮箱</span>
       </div>
 
       <div class="form-actions">
@@ -131,34 +108,50 @@ import { ref, watch } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { storeToRefs } from 'pinia'
 import { useToast } from '@/composables/useToast'
+import request from '@/utils/request'
 
 const configStore = useConfigStore()
 const { config } = storeToRefs(configStore)
 const toast = useToast()
 const loading = ref(false)
+const testingEmail = ref(false)
+const testEmailRecipient = ref('')
 
 const form = ref({
-  siteName: '',
-  siteDescription: '',
-  menuTitle: '',
-  menuIconUrl: '',
-  forceLogin: false,
-  uploadReview: false,
-  allowRegistration: false
+  smtpHost: '',
+  smtpPort: 465,
+  smtpUser: '',
+  smtpPass: '',
+  smtpFrom: '',
+  smtpSecure: true
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
 watch(config, (newConfig) => {
   form.value = {
-    siteName: newConfig?.siteName ?? '',
-    siteDescription: newConfig?.siteDescription ?? '',
-    menuTitle: newConfig?.menuTitle ?? '',
-    menuIconUrl: newConfig?.menuIconUrl ?? '',
-    forceLogin: !!newConfig?.forceLogin,
-    uploadReview: !!newConfig?.uploadReview,
-    allowRegistration: !!newConfig?.allowRegistration
+    smtpHost: newConfig?.smtpHost ?? '',
+    smtpPort: newConfig?.smtpPort ?? 465,
+    smtpUser: newConfig?.smtpUser ?? '',
+    smtpPass: newConfig?.smtpPass ?? '',
+    smtpFrom: newConfig?.smtpFrom ?? '',
+    smtpSecure: newConfig?.smtpSecure ?? true
   }
 }, { immediate: true })
+
+async function handleTestEmail() {
+  testingEmail.value = true
+  try {
+    await request.post('/config/test-email', {
+      ...form.value,
+      testEmailRecipient: testEmailRecipient.value
+    })
+    toast.success('测试邮件已发送，请查收')
+  } catch (error: any) {
+    toast.error(error.response?.data?.error || '发送测试邮件失败')
+  } finally {
+    testingEmail.value = false
+  }
+}
 
 async function handleSubmit() {
   loading.value = true
@@ -174,7 +167,7 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.site-settings {
+.email-settings {
   max-width: 600px;
 }
 
@@ -296,56 +289,9 @@ input:focus + .slider {
   box-shadow: 0 0 0 2px var(--color-accent-transparent);
 }
 
-.code-font {
-  font-family: monospace;
-  font-size: 0.9rem;
-}
-
 .help-text {
   font-size: 0.875rem;
   color: var(--color-text-tertiary);
-}
-
-.preview-section {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-md);
-}
-
-.preview-box {
-  margin-top: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-}
-
-.logo-preview {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  color: var(--color-text-primary);
-}
-
-.logo-icon-wrapper {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.logo-icon-wrapper img) {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.logo-text {
-  font-weight: 600;
-  font-size: 1.125rem;
 }
 
 .form-actions {
@@ -387,4 +333,12 @@ input:focus + .slider {
   cursor: not-allowed;
 }
 
+.test-email-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.test-email-row .form-input {
+  flex: 1;
+}
 </style>

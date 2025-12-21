@@ -154,6 +154,7 @@ npm run start
 - [ ] 图片管理按时间筛选
 - [ ] 用户头像上传与显示
 - [ ] API调用/用户token生成
+- [ ] 自定义发送邮件样式
 
 ### Milestone 4: Advanced Features
 - [ ] 图片评论功能
