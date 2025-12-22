@@ -99,7 +99,7 @@ const Photo = {
   /**
    * 获取图片列表（支持分页、筛选、排序）
    */
-  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds, status, currentUserId }: PhotoQueryParams & { currentUserId?: number } = {}): PhotoPaginatedResult {
+  findAll({ page = 1, limit = 20, tags = [], sort = 'created_at_desc', userId, userIds, status, likedByMe, currentUserId }: PhotoQueryParams & { currentUserId?: number } = {}): PhotoPaginatedResult {
     let whereClause = 'WHERE 1=1'
     const params: (string | number)[] = []
 
@@ -132,6 +132,14 @@ const Photo = {
         HAVING COUNT(DISTINCT t.id) = ?
       )`
       params.push(...tags, tags.length)
+    }
+
+    // 点赞筛选（只看我赞过的）
+    if (likedByMe && currentUserId) {
+      whereClause += ` AND p.id IN (
+        SELECT photo_id FROM likes WHERE user_id = ?
+      )`
+      params.push(currentUserId)
     }
 
     // 排序

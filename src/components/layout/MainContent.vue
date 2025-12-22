@@ -147,7 +147,7 @@ watch(() => photosStore.photos, (photos) => {
 
 // Fetch photos on settings change
 watch(
-  () => [settingsStore.selectedTags, settingsStore.sortBy],
+  () => [settingsStore.selectedTags, settingsStore.selectedUsers, settingsStore.likedByMe, settingsStore.sortBy],
   () => {
     fetchPhotos()
   },
@@ -172,6 +172,8 @@ watch(() => authStore.isLoggedIn, (isLoggedIn) => {
 async function fetchPhotos(): Promise<void> {
   await photosStore.fetchPhotos({
     tags: settingsStore.selectedTags,
+    userIds: settingsStore.selectedUsers,
+    likedByMe: settingsStore.likedByMe,
     sort: settingsStore.sortBy
   })
 }

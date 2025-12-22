@@ -21,6 +21,7 @@ export interface PhotoFilters {
   sort: 'created_at_desc' | 'created_at_asc' | 'random'
   userId: number | null
   userIds: number[]
+  likedByMe?: boolean
 }
 
 /**
@@ -49,7 +50,8 @@ export const usePhotosStore = defineStore('photos', () => {
     tags: [],
     sort: 'created_at_desc',
     userId: null,
-    userIds: []
+    userIds: [],
+    likedByMe: false
   })
 
   // Getters
@@ -70,7 +72,8 @@ export const usePhotosStore = defineStore('photos', () => {
       tags: filters.tags ?? [],
       sort: filters.sort ?? 'created_at_desc',
       userId: filters.userId ?? null,
-      userIds: filters.userIds ?? []
+      userIds: filters.userIds ?? [],
+      likedByMe: filters.likedByMe ?? false
     }
     
     try {
@@ -92,6 +95,11 @@ export const usePhotosStore = defineStore('photos', () => {
 
       if (currentFilters.value.userIds.length > 0) {
         params.userIds = currentFilters.value.userIds.join(',')
+      }
+
+      // 添加点赞筛选
+      if (currentFilters.value.likedByMe) {
+        params.likedByMe = true
       }
       
       const response = await photosApi.getPhotos(params)
@@ -137,6 +145,10 @@ export const usePhotosStore = defineStore('photos', () => {
 
       if (currentFilters.value.userIds.length > 0) {
         params.userIds = currentFilters.value.userIds.join(',')
+      }
+
+      if (currentFilters.value.likedByMe) {
+        params.likedByMe = true
       }
       
       const response = await photosApi.getPhotos(params)

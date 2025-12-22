@@ -13,6 +13,7 @@ export interface PhotoQueryParams {
   userId?: number
   userIds?: string
   status?: 'pending' | 'approved' | 'rejected'
+  likedByMe?: boolean
 }
 
 /**

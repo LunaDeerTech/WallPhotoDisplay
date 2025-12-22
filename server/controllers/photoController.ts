@@ -100,13 +100,14 @@ async function processImage(filePath: string, filename: string): Promise<ImageDi
  */
 export async function getPhotos(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { page = '1', limit = '20', tags, sort = 'created_at_desc', userId, userIds } = req.query as {
+    const { page = '1', limit = '20', tags, sort = 'created_at_desc', userId, userIds, likedByMe } = req.query as {
       page?: string
       limit?: string
       tags?: string
       sort?: PhotoQueryParams['sort']
       userId?: string
       userIds?: string
+      likedByMe?: string
     }
     
     // 解析标签参数
@@ -121,6 +122,18 @@ export async function getPhotos(req: AuthenticatedRequest, res: Response): Promi
       userIdArray = userIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
     }
     
+    // 解析likedByMe参数
+    const likedByMeFlag = likedByMe === 'true' || likedByMe === '1'
+    
+    // 如果likedByMe为true，需要用户登录
+    if (likedByMeFlag && !req.user?.id) {
+      res.status(401).json({
+        success: false,
+        error: 'Login required for likedByMe filter'
+      })
+      return
+    }
+    
     // 默认只显示已审核通过的图片，除非是查询自己的图片或者管理员查询
     // 但这里是公共接口，通常只返回 approved。
     // 如果需要查询 pending，应该使用专门的接口或者参数（仅限管理员或本人）
@@ -133,6 +146,7 @@ export async function getPhotos(req: AuthenticatedRequest, res: Response): Promi
       sort,
       userId: userId ? parseInt(userId) : undefined,
       userIds: userIdArray.length > 0 ? userIdArray : undefined,
+      likedByMe: likedByMeFlag,
       status: 'approved',
       currentUserId: req.user?.id
     })

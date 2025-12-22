@@ -2,7 +2,7 @@
   <Modal
     v-model="isOpen"
     title="筛选图片"
-    subtitle="通过标签筛选展示的图片"
+    subtitle="通过标签、用户和点赞状态筛选图片"
     size="md"
     @close="handleClose"
   >
@@ -97,6 +97,42 @@
           </div>
         </div>
       </div>
+
+      <!-- Liked filter -->
+      <div class="setting-group">
+        <div class="setting-header">
+          <label class="setting-label">点赞筛选</label>
+        </div>
+        <button
+          type="button"
+          class="liked-filter-btn"
+          :class="{ active: localLikedByMe }"
+          @click="localLikedByMe = !localLikedByMe"
+        >
+          <div class="liked-filter-content">
+            <div class="liked-icon-wrapper">
+              <svg 
+                class="liked-icon" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="liked-text-content">
+              <span class="liked-label">只看我赞过的图片</span>
+              <span class="liked-description">仅显示您点赞过的图片</span>
+            </div>
+            <div class="liked-checkmark" v-if="localLikedByMe">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </button>
+      </div>
     </div>
 
     <template #footer>
@@ -159,6 +195,7 @@ const isOpen = computed({
 
 const localTags = ref<string[]>([])
 const localUsers = ref<number[]>([])
+const localLikedByMe = ref<boolean>(false)
 const users = ref<User[]>([])
 const userSearchKeyword = ref('')
 
@@ -205,6 +242,7 @@ watch(isOpen, (newValue) => {
   if (newValue) {
     localTags.value = [...settingsStore.selectedTags]
     localUsers.value = [...(settingsStore.selectedUsers || [])]
+    localLikedByMe.value = settingsStore.likedByMe || false
     if (users.value.length === 0) {
       fetchUsers()
     }
@@ -220,6 +258,7 @@ function handleClose(): void {
 function handleSave(): void {
   settingsStore.setSelectedTags(localTags.value)
   settingsStore.setSelectedUsers(localUsers.value)
+  settingsStore.setLikedByMe(localLikedByMe.value)
   isOpen.value = false
 }
 
@@ -227,6 +266,7 @@ function handleSave(): void {
 function resetToDefaults(): void {
   localTags.value = []
   localUsers.value = []
+  localLikedByMe.value = false
   userSearchKeyword.value = ''
 }
 </script>
@@ -442,5 +482,121 @@ function resetToDefaults(): void {
 .summary-tag svg {
   width: 12px;
   height: 12px;
+}
+
+.liked-filter-btn {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  position: relative;
+}
+
+.liked-filter-btn:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.liked-filter-btn.active {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+}
+
+.liked-filter-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.liked-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.liked-filter-btn.active .liked-icon-wrapper {
+  background: var(--color-accent);
+}
+
+.liked-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.liked-filter-btn.active .liked-icon {
+  color: white;
+}
+
+.liked-text-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.liked-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.liked-description {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
+.liked-filter-btn.active .liked-label {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.liked-filter-btn.active .liked-description {
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+.liked-checkmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--color-accent);
+  border-radius: var(--radius-round);
+  flex-shrink: 0;
+  animation: checkmark-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.liked-checkmark svg {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>
