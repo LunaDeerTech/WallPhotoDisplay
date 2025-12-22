@@ -28,6 +28,8 @@
           @photo-select="handlePhotoSelect"
           @photo-view="handlePhotoView"
           @photo-like="handlePhotoLike"
+          @tag-click="handleTagClick"
+          @uploader-click="handleUploaderClick"
         />
 
         <!-- Photo Context Menu -->
@@ -104,6 +106,7 @@ import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import { useMultiSelect } from '@/composables/useMultiSelect'
 import { useContextMenu } from '@/composables/useContextMenu'
+import { useToast } from '@/composables/useToast'
 import PhotoWaterfall from '../photo/PhotoWaterfall.vue'
 import PhotoViewer from '../photo/PhotoViewer.vue'
 import PhotoContextMenu from '../photo/PhotoContextMenu.vue'
@@ -121,6 +124,7 @@ const photosStore = usePhotosStore()
 const settingsStore = useSettingsStore()
 const configStore = useConfigStore()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const isLocked = computed(() => configStore.config.forceLogin && !authStore.isLoggedIn)
 
@@ -257,6 +261,29 @@ function handleBatchEditTags(): void {
 function handleBatchDelete(): void {
   const selectedPhotos = multiSelect.getSelectedItems()
   emit('batch-delete', selectedPhotos)
+}
+
+// Handle tag click - add tag to filters
+function handleTagClick(tag: string): void {
+  if (!settingsStore.selectedTags.includes(tag)) {
+    settingsStore.addSelectedTag(tag)
+    toast.success(`已添加标签筛选: #${tag}`)
+  } else {
+    toast.info(`标签 #${tag} 已在筛选中`)
+  }
+}
+
+// Handle uploader click - add user to filters
+function handleUploaderClick(userId: number): void {
+  if (!settingsStore.selectedUsers.includes(userId)) {
+    settingsStore.setSelectedUsers([...settingsStore.selectedUsers, userId])
+    // 获取用户名称显示在提示中
+    const photo = photosStore.photos.find(p => p.userId === userId)
+    const userName = photo?.uploaderName || '用户'
+    toast.success(`已添加用户筛选: @${userName}`)
+  } else {
+    toast.info('该用户已在筛选中')
+  }
 }
 
 // Show login dialog

@@ -51,6 +51,8 @@
           @view="handlePhotoView"
           @image-load="handleImageLoad(photo)"
           @like="handlePhotoLike"
+          @tag-click="handleTagClick"
+          @uploader-click="handleUploaderClick"
         />
       </div>
     </div>
@@ -118,6 +120,8 @@ const emit = defineEmits<{
   'photo-select': [photo: Photo, selected: boolean]
   'photo-view': [photo: Photo]
   'photo-like': [photo: Photo]
+  'tag-click': [tag: string]
+  'uploader-click': [userId: number]
 }>()
 
 // Refs
@@ -258,6 +262,14 @@ function handlePhotoView(photo: Photo): void {
 
 function handlePhotoLike(photo: Photo): void {
   emit('photo-like', photo)
+}
+
+function handleTagClick(tag: string): void {
+  emit('tag-click', tag)
+}
+
+function handleUploaderClick(userId: number): void {
+  emit('uploader-click', userId)
 }
 
 // Intersection Observer for infinite scroll

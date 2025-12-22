@@ -75,17 +75,18 @@
     <div v-if="showSelectedSummary && selectedTags.length > 0" class="selected-summary">
       <span class="summary-label">已选择:</span>
       <div class="summary-tags">
-        <span
+        <button
           v-for="tag in selectedTags"
           :key="tag"
+          type="button"
           class="summary-tag"
-          @click="$emit('toggle', tag)"
+          @click.stop="removeSelectedTag(tag)"
         >
           #{{ tag }}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-        </span>
+        </button>
       </div>
     </div>
   </div>
@@ -162,6 +163,18 @@ function toggleTag(tag: Tag): void {
   } else {
     emit('select', tag.name)
     emit('update:selectedTags', [tag.name])
+  }
+}
+
+function removeSelectedTag(tagName: string): void {
+  if (props.multiSelect) {
+    const newSelected = props.selectedTags.filter(t => t !== tagName)
+    emit('update:selectedTags', newSelected)
+    emit('toggle', tagName)
+  } else {
+    // For single select mode, removing the last tag clears the selection
+    emit('update:selectedTags', [])
+    emit('toggle', tagName)
   }
 }
 

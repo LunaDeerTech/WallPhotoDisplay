@@ -65,7 +65,12 @@
     <div v-if="showInfo" class="photo-footer">
       <!-- Tags -->
       <div v-if="photo.tags && photo.tags.length > 0" class="photo-tags">
-        <span v-for="tag in displayTags" :key="tag.id" class="photo-tag">
+        <span 
+          v-for="tag in displayTags" 
+          :key="tag.id" 
+          class="photo-tag"
+          @click.stop="handleTagClick(tag.name)"
+        >
           #{{ tag.name }}
         </span>
         <span v-if="photo.tags.length > maxDisplayTags" class="photo-tag-more">
@@ -77,7 +82,13 @@
       <div class="photo-meta">
         <!-- Uploader -->
         <div class="photo-uploader">
-          <span v-if="showUploader && photo.uploaderName" class="uploader-name">@{{ photo.uploaderName }}</span>
+          <span 
+            v-if="showUploader && photo.uploaderName" 
+            class="uploader-name"
+            @click.stop="handleUploaderClick(photo.userId)"
+          >
+            @{{ photo.uploaderName }}
+          </span>
         </div>
         
         <!-- Like Button -->
@@ -125,6 +136,8 @@ const emit = defineEmits<{
   'view': [photo: Photo]
   'image-load': [photo: Photo]
   'like': [photo: Photo]
+  'tag-click': [tag: string]
+  'uploader-click': [userId: number]
 }>()
 
 // State
@@ -195,6 +208,14 @@ function handleImageError(): void {
 
 function handleLike(): void {
   emit('like', props.photo)
+}
+
+function handleTagClick(tag: string): void {
+  emit('tag-click', tag)
+}
+
+function handleUploaderClick(userId: number): void {
+  emit('uploader-click', userId)
 }
 
 // Initialize - check if image is already cached/loaded
@@ -379,6 +400,12 @@ onMounted(() => {
 .photo-tag {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.photo-tag:hover {
+  color: var(--color-accent);
 }
 
 .photo-tag-more {
@@ -401,6 +428,12 @@ onMounted(() => {
 .uploader-name {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.uploader-name:hover {
+  color: var(--color-accent);
 }
 
 .photo-like {
