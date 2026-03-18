@@ -224,6 +224,7 @@ import TagEditDialog from '../dialogs/TagEditDialog.vue'
 import ImageUploadDialog from '../dialogs/ImageUploadDialog.vue'
 import photosApi from '@/api/photos'
 import { useToast } from '@/composables/useToast'
+import { copyToClipboard } from '@/utils/helpers'
 import type { Photo, ContextMenuItem } from '@/types'
 
 interface Pagination {
@@ -444,8 +445,12 @@ async function handleCopyLink(photo: Photo): Promise<void> {
     const link = photo.url.startsWith('http') 
       ? photo.url 
       : `${window.location.origin}${photo.url}`
-    await navigator.clipboard.writeText(link)
-    toast.success('链接已复制到剪贴板')
+    const success = await copyToClipboard(link)
+    if (success) {
+      toast.success('链接已复制到剪贴板')
+    } else {
+      toast.error('复制链接失败')
+    }
   } catch (error) {
     console.error('Copy link error:', error)
     toast.error('复制链接失败')

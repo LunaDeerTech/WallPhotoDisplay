@@ -108,6 +108,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useMultiSelect } from '@/composables/useMultiSelect'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useToast } from '@/composables/useToast'
+import { copyToClipboard } from '@/utils/helpers'
 import PhotoWaterfall from '../photo/PhotoWaterfall.vue'
 import PhotoViewer from '../photo/PhotoViewer.vue'
 import PhotoContextMenu from '../photo/PhotoContextMenu.vue'
@@ -247,8 +248,12 @@ async function handleCopyLink(photo: Photo): Promise<void> {
     const link = photo.url.startsWith('http') 
       ? photo.url 
       : `${window.location.origin}${photo.url}`
-    await navigator.clipboard.writeText(link)
-    toast.success('链接已复制到剪贴板')
+    const success = await copyToClipboard(link)
+    if (success) {
+      toast.success('链接已复制到剪贴板')
+    } else {
+      toast.error('复制链接失败')
+    }
   } catch (error) {
     console.error('Copy link error:', error)
     toast.error('复制链接失败')

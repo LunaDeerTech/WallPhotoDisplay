@@ -158,3 +158,46 @@ export function deepClone<T>(obj: T): T {
   }
   return cloned
 }
+
+/**
+ * 复制文本到剪贴板（兼容 iframe 环境）
+ * @param text - 要复制的文本
+ * @returns Promise<boolean> - 是否复制成功
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  // 优先使用现代 Clipboard API
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch (error) {
+      console.warn('Clipboard API failed, falling back to execCommand:', error)
+    }
+  }
+  
+  // 降级方案：使用 document.execCommand('copy')
+  // 这在 iframe 环境中更可靠
+  try {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    
+    // 防止滚动到底部
+    textArea.style.top = '0'
+    textArea.style.left = '0'
+    textArea.style.position = 'fixed'
+    textArea.style.opacity = '0'
+    textArea.style.pointerEvents = 'none'
+    
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    
+    const successful = document.execCommand('copy')
+    document.body.removeChild(textArea)
+    
+    return successful
+  } catch (error) {
+    console.error('Copy to clipboard failed:', error)
+    return false
+  }
+}
