@@ -193,6 +193,7 @@ const {
 
 const menuItems = computed<ContextMenuItem[]>(() => [
   { id: 'view', label: '放大查看', icon: 'zoom-in' },
+  { id: 'copy-link', label: '复制链接', icon: 'link' },
   { id: 'edit-tags', label: '编辑标签', icon: 'tag' },
   { id: 'multi-select', label: '多选', icon: 'check-square' },
   { id: 'divider', label: '', icon: '', divider: true }, // Ensure type compatibility
@@ -260,6 +261,9 @@ function handleContextMenuSelect(item: ContextMenuItem) {
       viewingPhoto.value = photo
       showViewer.value = true
       break
+    case 'copy-link':
+      handleCopyLink(photo)
+      break
     case 'edit-tags':
       tagEditPhotos.value = [photo]
       showTagEdit.value = true
@@ -274,6 +278,24 @@ function handleContextMenuSelect(item: ContextMenuItem) {
     case 'reject':
       handleReview(photo, 'reject')
       break
+  }
+}
+
+// Copy link
+async function handleCopyLink(photo: Photo): Promise<void> {
+  try {
+    if (!photo.url) {
+      toast.error('图片链接不存在')
+      return
+    }
+    const link = photo.url.startsWith('http') 
+      ? photo.url 
+      : `${window.location.origin}${photo.url}`
+    await navigator.clipboard.writeText(link)
+    toast.success('链接已复制到剪贴板')
+  } catch (error) {
+    console.error('Copy link error:', error)
+    toast.error('复制链接失败')
   }
 }
 

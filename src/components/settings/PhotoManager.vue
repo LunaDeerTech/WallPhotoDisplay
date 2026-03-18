@@ -223,6 +223,7 @@ import PhotoViewer from '../photo/PhotoViewer.vue'
 import TagEditDialog from '../dialogs/TagEditDialog.vue'
 import ImageUploadDialog from '../dialogs/ImageUploadDialog.vue'
 import photosApi from '@/api/photos'
+import { useToast } from '@/composables/useToast'
 import type { Photo, ContextMenuItem } from '@/types'
 
 interface Pagination {
@@ -271,19 +272,23 @@ const deleting = ref(false)
 // Refs
 const photosContainerRef = ref<HTMLElement | null>(null)
 
+// Toast
+const toast = useToast()
+
 // Computed
 const hasMore = computed(() => pagination.value.page < pagination.value.totalPages)
 
 const contextMenuItems = computed((): ContextMenuItem[] => {
   const items: ContextMenuItem[] = [
     { id: 'view', label: '放大查看', icon: 'zoom-in' },
+    { id: 'copy-link', label: '复制链接', icon: 'link' },
     { id: 'edit-tags', label: '编辑标签', icon: 'tag' },
     { id: 'divider1', label: '', divider: true },
     { id: 'delete', label: '删除', icon: 'trash', danger: true }
   ]
   
   if (!isMultiSelectMode.value) {
-    items.splice(2, 0, { id: 'multi-select', label: '多选', icon: 'check-square' })
+    items.splice(3, 0, { id: 'multi-select', label: '多选', icon: 'check-square' })
   }
   
   return items
@@ -411,6 +416,9 @@ function handleContextMenuSelect(item: ContextMenuItem): void {
       viewingPhoto.value = photo
       showViewer.value = true
       break
+    case 'copy-link':
+      handleCopyLink(photo)
+      break
     case 'edit-tags':
       tagEditPhotos.value = [photo]
       showTagEdit.value = true
@@ -423,6 +431,24 @@ function handleContextMenuSelect(item: ContextMenuItem): void {
       deleteTargetPhotos.value = [photo]
       showDeleteConfirm.value = true
       break
+  }
+}
+
+// Copy link
+async function handleCopyLink(photo: Photo): Promise<void> {
+  try {
+    if (!photo.url) {
+      toast.error('图片链接不存在')
+      return
+    }
+    const link = photo.url.startsWith('http') 
+      ? photo.url 
+      : `${window.location.origin}${photo.url}`
+    await navigator.clipboard.writeText(link)
+    toast.success('链接已复制到剪贴板')
+  } catch (error) {
+    console.error('Copy link error:', error)
+    toast.error('复制链接失败')
   }
 }
 

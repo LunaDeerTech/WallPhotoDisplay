@@ -41,6 +41,7 @@
           :selection-mode="multiSelect.isSelectionMode.value"
           @view="handlePhotoView"
           @download="handleDownload"
+          @copy-link="handleCopyLink"
           @edit-tags="handleEditTags"
           @delete="handleDelete"
           @multi-select="handleEnterMultiSelect"
@@ -235,6 +236,23 @@ function handleDownload(photo: Photo): void {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+async function handleCopyLink(photo: Photo): Promise<void> {
+  try {
+    if (!photo.url) {
+      toast.error('图片链接不存在')
+      return
+    }
+    const link = photo.url.startsWith('http') 
+      ? photo.url 
+      : `${window.location.origin}${photo.url}`
+    await navigator.clipboard.writeText(link)
+    toast.success('链接已复制到剪贴板')
+  } catch (error) {
+    console.error('Copy link error:', error)
+    toast.error('复制链接失败')
+  }
 }
 
 function handleEditTags(photo: Photo): void {

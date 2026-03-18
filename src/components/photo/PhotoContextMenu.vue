@@ -37,6 +37,7 @@ const emit = defineEmits<{
   'close': []
   'view': [photo: Photo]
   'download': [photo: Photo]
+  'copy-link': [photo: Photo]
   'edit-tags': [photo: Photo]
   'delete': [photo: Photo]
   'multi-select': []
@@ -62,6 +63,12 @@ const menuItems = computed((): ContextMenuItem[] => {
     id: 'download',
     label: '下载图片',
     icon: 'download'
+  })
+  
+  items.push({
+    id: 'copy-link',
+    label: '复制链接',
+    icon: 'link'
   })
   
   // Check if user can edit/delete
@@ -127,6 +134,9 @@ function handleSelect(item: ContextMenuItem): void {
       break
     case 'download':
       emit('download', props.photo)
+      break
+    case 'copy-link':
+      emit('copy-link', props.photo)
       break
     case 'edit-tags':
       emit('edit-tags', props.photo)
