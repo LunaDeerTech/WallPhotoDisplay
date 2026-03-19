@@ -1,0 +1,18 @@
+services:
+  photowall:
+    image: ghcr.io/lunadeertech/wallphotodisplay:latest
+    container_name: photowall
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # 【必须修改】JWT 密钥，请替换为一个随机字符串
+      - JWT_SECRET=please-change-this-to-a-random-secret-string
+      # 数据库路径（容器内路径，一般无需修改）
+      - DB_PATH=/app/data/photowall.db
+      # 上传目录（容器内路径，一般无需修改）
+      - UPLOAD_PATH=/app/data/uploads

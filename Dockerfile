@@ -1,62 +1,52 @@
-# ============================================
-# Wall Photo Display - Production Dockerfile
-# Multi-stage build for optimized image size
-# ============================================
-
-# Stage 1: Build frontend and backend
-FROM node:20-alpine AS builder
-
-# Install build dependencies for native modules (sharp, better-sqlite3, bcrypt)
-RUN apk add --no-cache python3 make g++ vips-dev
+# ---- Build Stage ----
+FROM node:22 AS builder
 
 WORKDIR /app
 
-# Copy package files first for better cache
-COPY package*.json ./
-
-# Install all dependencies (including devDependencies for build)
+COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Copy source code
 COPY . .
 
-# Build frontend (Vue + Vite) and backend (TypeScript)
+# Build frontend (Vue) and backend (TypeScript)
 RUN npm run build:all
 
-# ============================================
-# Stage 2: Production runtime
-FROM node:20-alpine AS production
+# Prepare production node_modules in a separate directory
+RUN mkdir /app/prod_modules \
+    && cp package.json package-lock.json* /app/prod_modules/ \
+    && cd /app/prod_modules \
+    && npm ci --omit=dev
 
-# Install runtime dependencies for native modules
-RUN apk add --no-cache vips-dev
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S photowall -u 1001
+# ---- Production Stage ----
+FROM node:22-slim
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+RUN apt-get update && apt-get install -y tini --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Copy production node_modules from builder
+COPY --from=builder /app/prod_modules/node_modules ./node_modules
 
-# Copy built artifacts from builder stage
+# Copy built frontend assets and server
 COPY --from=builder /app/dist ./dist
 
-# Create directories for data persistence
-RUN mkdir -p data/uploads && chown -R photowall:nodejs data
+# Copy public assets and package.json
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./
 
-# Switch to non-root user
-USER photowall
+# Data directory will be mounted as volume
+RUN mkdir -p /app/data/uploads
 
-# Expose port
-EXPOSE 3000
-
-# Environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV DB_PATH=/app/data/photowall.db
+ENV UPLOAD_PATH=/app/data/uploads
 
-# Start the application (npm run start)
-CMD ["npm", "run", "start"]
+EXPOSE 3000
+
+VOLUME ["/app/data"]
+
+ENTRYPOINT ["tini", "--"]
+CMD ["node", "dist/server/index.js"]
