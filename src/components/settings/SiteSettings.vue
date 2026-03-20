@@ -133,6 +133,22 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <div class="setting-row">
+          <div class="setting-info">
+            <label class="setting-label">人机验证</label>
+            <span class="help-text">开启后，登录、注册、找回密码时需要输入验证码，防止恶意攻击</span>
+          </div>
+          <label class="switch">
+            <input 
+              v-model="form.enableCaptcha" 
+              type="checkbox" 
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           {{ loading ? '保存中...' : '保存设置' }}
@@ -161,7 +177,8 @@ const form = ref({
   forceLogin: false,
   uploadReview: false,
   allowRegistration: false,
-  enableApiKey: false
+  enableApiKey: false,
+  enableCaptcha: true
 })
 
 // Watch for config changes to update form (e.g. if loaded after mount)
@@ -174,7 +191,8 @@ watch(config, (newConfig) => {
     forceLogin: !!newConfig?.forceLogin,
     uploadReview: !!newConfig?.uploadReview,
     allowRegistration: !!newConfig?.allowRegistration,
-    enableApiKey: !!newConfig?.enableApiKey
+    enableApiKey: !!newConfig?.enableApiKey,
+    enableCaptcha: newConfig?.enableCaptcha !== false
   }
 }, { immediate: true })
 

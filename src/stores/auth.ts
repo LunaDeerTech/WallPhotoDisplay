@@ -40,10 +40,10 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 用户登录
    */
-  async function login(username: string, password: string): Promise<LoginResult> {
+  async function login(username: string, password: string, captchaId?: string, captchaText?: string): Promise<LoginResult> {
     loading.value = true
     try {
-      const response = await authApi.login(username, password)
+      const response = await authApi.login(username, password, captchaId, captchaText)
       
       if (response.success && response.data) {
         token.value = response.data.token
@@ -65,10 +65,10 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 用户注册
    */
-  async function register(payload: UserCreatePayload): Promise<RegisterResult> {
+  async function register(payload: UserCreatePayload, captchaId?: string, captchaText?: string): Promise<RegisterResult> {
     loading.value = true
     try {
-      const response = await authApi.register(payload)
+      const response = await authApi.register(payload, captchaId, captchaText)
       
       if (response.success && response.data) {
         // 注册成功后自动登录

@@ -21,6 +21,16 @@
         />
       </div>
 
+      <!-- Captcha -->
+      <CaptchaInput
+        v-if="captchaEnabled"
+        ref="captchaRef"
+        :disabled="loading"
+        :enabled="captchaEnabled"
+        @update:captcha-id="captchaId = $event"
+        @update:captcha-text="captchaText = $event"
+      />
+
       <!-- Success message -->
       <Transition name="fade">
         <div v-if="successMessage" class="form-success">
@@ -71,7 +81,7 @@
           type="submit"
           class="btn btn-primary"
           @click="handleSubmit"
-          :disabled="loading || !form.identifier.trim()"
+          :disabled="loading || !isSubmitValid"
         >
           <span v-if="loading" class="btn-loading">
             <svg class="spinner" viewBox="0 0 24 24">
@@ -88,7 +98,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
+import CaptchaInput from '../common/CaptchaInput.vue'
 import authApi from '@/api/auth'
+import { useConfigStore } from '@/stores/config'
 
 interface Props {
   modelValue?: boolean
@@ -101,6 +113,8 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
+
+const configStore = useConfigStore()
 
 interface ResetForm {
   identifier: string
@@ -119,6 +133,19 @@ const form = ref<ResetForm>({
 const loading = ref(false)
 const error = ref('')
 const successMessage = ref('')
+const captchaId = ref('')
+const captchaText = ref('')
+const captchaRef = ref<InstanceType<typeof CaptchaInput> | null>(null)
+
+const captchaEnabled = computed(() => configStore.config?.enableCaptcha !== false)
+
+const isSubmitValid = computed(() => {
+  const baseValid = !!form.value.identifier.trim()
+  if (captchaEnabled.value) {
+    return baseValid && captchaText.value.trim() !== ''
+  }
+  return baseValid
+})
 
 // Reset form when dialog opens
 watch(isOpen, (newValue) => {
@@ -126,6 +153,8 @@ watch(isOpen, (newValue) => {
     form.value = { identifier: '' }
     error.value = ''
     successMessage.value = ''
+    captchaId.value = ''
+    captchaText.value = ''
   }
 })
 
@@ -145,7 +174,11 @@ async function handleSubmit(): Promise<void> {
   successMessage.value = ''
 
   try {
-    const response = await authApi.resetPassword(form.value.identifier.trim())
+    const response = await authApi.resetPassword(
+      form.value.identifier.trim(),
+      captchaEnabled.value ? captchaId.value : undefined,
+      captchaEnabled.value ? captchaText.value : undefined
+    )
     
     if (response.success) {
       successMessage.value = response.message || '密码重置成功，请检查您的邮箱'
@@ -157,9 +190,11 @@ async function handleSubmit(): Promise<void> {
       }, 3000)
     } else {
       error.value = response.error || '密码重置失败'
+      captchaRef.value?.reset()
     }
   } catch (e: any) {
     error.value = e.error || '网络错误，请稍后重试'
+    captchaRef.value?.reset()
   } finally {
     loading.value = false
   }

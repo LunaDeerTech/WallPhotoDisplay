@@ -15,6 +15,7 @@ const DEFAULT_CONFIG = {
   uploadReview: false,
   allowRegistration: false,
   enableApiKey: false,
+  enableCaptcha: true,
   smtpHost: '',
   smtpPort: 465,
   smtpUser: '',

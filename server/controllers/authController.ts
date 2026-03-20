@@ -3,8 +3,32 @@ import { User, Verification } from '../models/index.js'
 import { generateToken } from '../middleware/auth.js'
 import { sendEmail } from '../utils/email.js'
 import { loadConfig } from './configController.js'
+import { createCaptcha, verifyCaptcha } from '../utils/captcha.js'
 import bcrypt from 'bcrypt'
 import type { AuthenticatedRequest, LoginRequestBody, RegisterRequestBody } from '../types/index.js'
+
+/**
+ * 获取验证码
+ * GET /api/auth/captcha
+ */
+export async function getCaptcha(_req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const captcha = createCaptcha()
+    res.json({
+      success: true,
+      data: {
+        captchaId: captcha.id,
+        captchaSvg: captcha.svg
+      }
+    })
+  } catch (error) {
+    console.error('Get captcha error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate captcha'
+    })
+  }
+}
 
 /**
  * 用户注册
@@ -12,8 +36,21 @@ import type { AuthenticatedRequest, LoginRequestBody, RegisterRequestBody } from
  */
 export async function register(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { username, password, displayName } = req.body as RegisterRequestBody
+    const { username, password, displayName, captchaId, captchaText } = req.body as RegisterRequestBody & { captchaId?: string; captchaText?: string }
     
+    // 验证人机验证码
+    const config = await loadConfig()
+    if (config.enableCaptcha !== false) {
+      if (!captchaId || !captchaText) {
+        res.status(400).json({ success: false, error: '请输入验证码' })
+        return
+      }
+      if (!verifyCaptcha(captchaId, captchaText)) {
+        res.status(400).json({ success: false, error: '验证码错误或已过期' })
+        return
+      }
+    }
+
     // 验证参数
     if (!username || !password) {
       res.status(400).json({
@@ -59,7 +96,6 @@ export async function register(req: AuthenticatedRequest, res: Response): Promis
     }
     
     // 检查系统设置是否允许注册
-    const config = await loadConfig()
     if (!config.allowRegistration) {
       res.status(403).json({
         success: false,
@@ -121,8 +157,21 @@ export async function register(req: AuthenticatedRequest, res: Response): Promis
  */
 export async function login(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { username, password } = req.body as LoginRequestBody
+    const { username, password, captchaId, captchaText } = req.body as LoginRequestBody & { captchaId?: string; captchaText?: string }
     
+    // 验证人机验证码
+    const config = await loadConfig()
+    if (config.enableCaptcha !== false) {
+      if (!captchaId || !captchaText) {
+        res.status(400).json({ success: false, error: '请输入验证码' })
+        return
+      }
+      if (!verifyCaptcha(captchaId, captchaText)) {
+        res.status(400).json({ success: false, error: '验证码错误或已过期' })
+        return
+      }
+    }
+
     // 验证参数
     if (!username || !password) {
       res.status(400).json({
@@ -373,8 +422,21 @@ function generateRandomPassword(length: number = 12): string {
  */
 export async function resetPassword(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { identifier } = req.body
+    const { identifier, captchaId, captchaText } = req.body
     
+    // 验证人机验证码
+    const config = await loadConfig()
+    if (config.enableCaptcha !== false) {
+      if (!captchaId || !captchaText) {
+        res.status(400).json({ success: false, error: '请输入验证码' })
+        return
+      }
+      if (!verifyCaptcha(captchaId, captchaText)) {
+        res.status(400).json({ success: false, error: '验证码错误或已过期' })
+        return
+      }
+    }
+
     if (!identifier) {
       res.status(400).json({ success: false, error: 'Email or username is required' })
       return
@@ -416,7 +478,6 @@ export async function resetPassword(req: AuthenticatedRequest, res: Response): P
     }
 
     // 发送邮件
-    const config = await loadConfig()
     if (!config.smtpHost) {
       res.status(500).json({ success: false, error: 'SMTP configuration missing' })
       return
@@ -451,6 +512,7 @@ export async function resetPassword(req: AuthenticatedRequest, res: Response): P
 }
 
 export default {
+  getCaptcha,
   register,
   login,
   logout,
@@ -458,5 +520,4 @@ export default {
   sendVerificationCode,
   verifyEmail,
   resetPassword
-
 }

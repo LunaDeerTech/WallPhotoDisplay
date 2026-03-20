@@ -66,6 +66,16 @@
         </div>
       </div>
 
+      <!-- Captcha -->
+      <CaptchaInput
+        v-if="captchaEnabled"
+        ref="captchaRef"
+        :disabled="loading"
+        :enabled="captchaEnabled"
+        @update:captcha-id="captchaId = $event"
+        @update:captcha-text="captchaText = $event"
+      />
+
       <!-- Error message -->
       <Transition name="fade">
         <div v-if="error" class="form-error">
@@ -124,6 +134,7 @@
 import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useConfigStore } from '@/stores/config'
+import CaptchaInput from './CaptchaInput.vue'
 
 interface Props {
   showHeader?: boolean
@@ -168,10 +179,19 @@ const form = ref<LoginForm>({
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
+const captchaId = ref('')
+const captchaText = ref('')
+const captchaRef = ref<InstanceType<typeof CaptchaInput> | null>(null)
+
+const captchaEnabled = computed(() => configStore.config?.enableCaptcha !== false)
 
 // Form validation
 const isFormValid = computed(() => {
-  return form.value.username.trim() !== '' && form.value.password.trim() !== ''
+  const baseValid = form.value.username.trim() !== '' && form.value.password.trim() !== ''
+  if (captchaEnabled.value) {
+    return baseValid && captchaText.value.trim() !== ''
+  }
+  return baseValid
 })
 
 // Expose loading state to parent components
@@ -197,6 +217,8 @@ function resetForm(): void {
   form.value = { username: '', password: '' }
   showPassword.value = false
   error.value = ''
+  captchaId.value = ''
+  captchaText.value = ''
 }
 
 // Handle submit
@@ -207,12 +229,19 @@ async function handleSubmit(): Promise<void> {
   error.value = ''
 
   try {
-    const result = await authStore.login(form.value.username, form.value.password)
+    const result = await authStore.login(
+      form.value.username,
+      form.value.password,
+      captchaEnabled.value ? captchaId.value : undefined,
+      captchaEnabled.value ? captchaText.value : undefined
+    )
     
     if (result.success) {
       emit('success')
     } else {
       error.value = result.error || '登录失败，请检查账号和密码'
+      // Refresh captcha on failure
+      captchaRef.value?.reset()
     }
   } catch (e) {
     error.value = '网络错误，请稍后重试'

@@ -1,9 +1,16 @@
 import express from 'express'
 const Router = express.Router
-import { register, login, logout, getCurrentUser, sendVerificationCode, verifyEmail, resetPassword } from '../controllers/authController.js'
+import { getCaptcha, register, login, logout, getCurrentUser, sendVerificationCode, verifyEmail, resetPassword } from '../controllers/authController.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
+
+/**
+ * @route GET /api/auth/captcha
+ * @desc 获取人机验证码
+ * @access Public
+ */
+router.get('/captcha', getCaptcha)
 
 /**
  * @route POST /api/auth/register

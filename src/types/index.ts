@@ -147,6 +147,7 @@ export interface SystemConfig {
   uploadReview?: boolean
   allowRegistration?: boolean
   enableApiKey?: boolean
+  enableCaptcha?: boolean
   // SMTP Settings
   smtpHost?: string
   smtpPort?: number

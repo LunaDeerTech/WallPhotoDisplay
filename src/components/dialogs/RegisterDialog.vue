@@ -90,6 +90,16 @@
         </div>
       </div>
 
+      <!-- Captcha -->
+      <CaptchaInput
+        v-if="captchaEnabled"
+        ref="captchaRef"
+        :disabled="loading"
+        :enabled="captchaEnabled"
+        @update:captcha-id="captchaId = $event"
+        @update:captcha-text="captchaText = $event"
+      />
+
       <!-- Error message -->
       <Transition name="fade">
         <div v-if="error" class="form-error">
@@ -146,7 +156,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from '../common/Modal.vue'
+import CaptchaInput from '../common/CaptchaInput.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useConfigStore } from '@/stores/config'
 
 interface Props {
   modelValue?: boolean
@@ -162,6 +174,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const configStore = useConfigStore()
 
 interface RegisterForm {
   username: string
@@ -186,6 +199,11 @@ const showConfirmPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
+const captchaId = ref('')
+const captchaText = ref('')
+const captchaRef = ref<InstanceType<typeof CaptchaInput> | null>(null)
+
+const captchaEnabled = computed(() => configStore.config?.enableCaptcha !== false)
 
 // Form validation
 const isFormValid = computed(() => {
@@ -194,8 +212,9 @@ const isFormValid = computed(() => {
                        /^[\w]+$/.test(form.value.username.trim())
   const passwordValid = form.value.password.length >= 6
   const passwordsMatch = form.value.password === form.value.confirmPassword
+  const captchaValid = captchaEnabled.value ? captchaText.value.trim() !== '' : true
   
-  return usernameValid && passwordValid && passwordsMatch
+  return usernameValid && passwordValid && passwordsMatch && captchaValid
 })
 
 // Username validation helper
@@ -221,6 +240,8 @@ watch(isOpen, (newValue) => {
     showConfirmPassword.value = false
     error.value = ''
     success.value = ''
+    captchaId.value = ''
+    captchaText.value = ''
   }
 })
 
@@ -264,7 +285,8 @@ async function handleSubmit(): Promise<void> {
     const result = await authStore.register({
       username: form.value.username.trim(),
       password: form.value.password
-    })
+    }, captchaEnabled.value ? captchaId.value : undefined,
+       captchaEnabled.value ? captchaText.value : undefined)
     
     if (result.success) {
       success.value = '注册成功！正在跳转...'
@@ -276,6 +298,7 @@ async function handleSubmit(): Promise<void> {
       }, 1000)
     } else {
       error.value = result.error || '注册失败，请稍后重试'
+      captchaRef.value?.reset()
     }
   } catch (e) {
     error.value = '网络错误，请稍后重试'

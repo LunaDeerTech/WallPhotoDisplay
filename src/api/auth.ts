@@ -2,24 +2,43 @@ import request from '@/utils/request'
 import type { ApiResponse, LoginResponse, User, UserCreatePayload } from '@/types'
 
 /**
+ * 验证码响应
+ */
+export interface CaptchaResponse {
+  captchaId: string
+  captchaSvg: string
+}
+
+/**
  * Auth API - 认证相关接口
  */
 const authApi = {
   /**
+   * 获取验证码
+   */
+  getCaptcha(): Promise<ApiResponse<CaptchaResponse>> {
+    return request.get('/auth/captcha')
+  },
+
+  /**
    * 用户登录
    * @param username - 用户名
    * @param password - 密码
+   * @param captchaId - 验证码ID
+   * @param captchaText - 验证码输入
    */
-  login(username: string, password: string): Promise<ApiResponse<LoginResponse>> {
-    return request.post('/auth/login', { username, password })
+  login(username: string, password: string, captchaId?: string, captchaText?: string): Promise<ApiResponse<LoginResponse>> {
+    return request.post('/auth/login', { username, password, captchaId, captchaText })
   },
 
   /**
    * 用户注册
    * @param payload - 注册信息
+   * @param captchaId - 验证码ID
+   * @param captchaText - 验证码输入
    */
-  register(payload: UserCreatePayload): Promise<ApiResponse<LoginResponse>> {
-    return request.post('/auth/register', payload)
+  register(payload: UserCreatePayload, captchaId?: string, captchaText?: string): Promise<ApiResponse<LoginResponse>> {
+    return request.post('/auth/register', { ...payload, captchaId, captchaText })
   },
 
   /**
@@ -53,9 +72,11 @@ const authApi = {
   /**
    * 密码重置
    * @param identifier - 用户名或邮箱
+   * @param captchaId - 验证码ID
+   * @param captchaText - 验证码输入
    */
-  resetPassword(identifier: string): Promise<ApiResponse<void>> {
-    return request.post('/auth/reset-password', { identifier })
+  resetPassword(identifier: string, captchaId?: string, captchaText?: string): Promise<ApiResponse<void>> {
+    return request.post('/auth/reset-password', { identifier, captchaId, captchaText })
   }
 }
 
